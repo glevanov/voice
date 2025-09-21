@@ -1,5 +1,5 @@
 <script>
-  import "./App.css";
+  import "./app.css";
 
   let text = "";
   let response = "";
