@@ -1,5 +1,6 @@
 <script>
     import "./app.css";
+    import { get } from "svelte/store";
     import {
         messages,
         addUserMessage,
@@ -19,7 +20,15 @@
         if (ws.readyState === WebSocket.OPEN) {
             const userMessage = text;
             addUserMessage(userMessage);
-            ws.send(userMessage);
+
+            // Get current messages (which now includes the new user message)
+            const currentMessages = get(messages);
+
+            // Send complete chat history
+            const payload = {
+                messages: currentMessages,
+            };
+            ws.send(JSON.stringify(payload));
             text = "";
         } else {
             alert("WebSocket connection is not open");

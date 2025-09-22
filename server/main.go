@@ -1,8 +1,10 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -14,7 +16,8 @@ import (
 )
 
 const (
-	LLM_MODEL   = "gemma3:4b"
+	LLM_MODEL   = "google/gemma-3n-e4b"
+	LLM_API_URL = "http://localhost:1234/v1/chat/completions"
 	PIPER_MODEL = "sv_SE-nst-medium.onnx"
 	PORT        = ":3002"
 )
@@ -25,9 +28,80 @@ var upgrader = websocket.Upgrader{
 	},
 }
 
+type Message struct {
+	Role    string `json:"role"`
+	Content string `json:"content"`
+}
+
+type ChatRequest struct {
+	Model    string    `json:"model"`
+	Messages []Message `json:"messages"`
+}
+
+type ChatChoice struct {
+	Index   int     `json:"index"`
+	Message Message `json:"message"`
+}
+
+type ChatResponse struct {
+	Choices []ChatChoice `json:"choices"`
+}
+
 type Response struct {
 	Text  string `json:"text"`
 	Audio string `json:"audio"`
+}
+
+type WebSocketMessage struct {
+	Messages []Message `json:"messages"`
+}
+
+func callLLMAPI(messages []Message) (string, error) {
+	// Prepend the developer message
+	fullMessages := []Message{
+		{
+			Role:    "developer",
+			Content: "You are a helpful and friendly conversation partner. Always answer in Swedish, as if you were talking to a friend. Answer as if you are speaking, avoiding using emojis, special characters, formatting or comments in your responses. Focus on natural language and a personal tone.",
+		},
+	}
+	fullMessages = append(fullMessages, messages...)
+
+	chatRequest := ChatRequest{
+		Model:    LLM_MODEL,
+		Messages: fullMessages,
+	}
+
+	jsonData, err := json.Marshal(chatRequest)
+	if err != nil {
+		return "", fmt.Errorf("error marshaling request: %v", err)
+	}
+
+	log.Printf("Sending API request: %s", string(jsonData))
+
+	resp, err := http.Post(LLM_API_URL, "application/json", bytes.NewBuffer(jsonData))
+	if err != nil {
+		return "", fmt.Errorf("error making API request: %v", err)
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", fmt.Errorf("error reading response body: %v", err)
+	}
+
+	log.Printf("Received API response: %s", string(body))
+
+	var chatResponse ChatResponse
+	err = json.Unmarshal(body, &chatResponse)
+	if err != nil {
+		return "", fmt.Errorf("error unmarshaling response: %v", err)
+	}
+
+	if len(chatResponse.Choices) == 0 {
+		return "", fmt.Errorf("no choices in response")
+	}
+
+	return chatResponse.Choices[0].Message.Content, nil
 }
 
 func handleWebSocket(w http.ResponseWriter, r *http.Request) {
@@ -49,16 +123,23 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 
 		log.Printf("Received: %s", message)
 
-		// Run Ollama LLM
-		cmd := exec.Command("ollama", "run", LLM_MODEL, string(message))
-		stdout, err := cmd.Output()
+		// Parse the incoming message containing chat history
+		var wsMessage WebSocketMessage
+		err = json.Unmarshal(message, &wsMessage)
+		if err != nil {
+			log.Printf("Error parsing message: %v", err)
+			conn.WriteMessage(websocket.TextMessage, []byte("Error parsing your request."))
+			continue
+		}
+
+		// Call LLM API with full chat history
+		llmOutput, err := callLLMAPI(wsMessage.Messages)
 		if err != nil {
 			log.Printf("LLM error: %v", err)
 			conn.WriteMessage(websocket.TextMessage, []byte("Error processing your request."))
 			continue
 		}
 
-		llmOutput := strings.TrimSpace(string(stdout))
 		log.Printf("LLM: %s", llmOutput)
 
 		// Run Piper TTS
