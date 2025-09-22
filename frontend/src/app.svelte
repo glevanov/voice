@@ -13,8 +13,106 @@
     let audio = null;
     let audioElement = null;
     let connectionStatus = "Connecting...";
+    let ws = null;
+    let reconnectTimeout = null;
+    let reconnectAttempts = 0;
+    const maxReconnectDelay = 30000; // Cap at 30 seconds
+    const baseReconnectDelay = 1000; // Start with 1 second
 
-    const ws = new WebSocket("ws://localhost:3002/ws");
+    const connect = () => {
+        try {
+            ws = new WebSocket("ws://localhost:3002/ws");
+            setupWebSocketHandlers();
+        } catch (error) {
+            console.error("Failed to create WebSocket:", error);
+            handleReconnect();
+        }
+    };
+
+    const setupWebSocketHandlers = () => {
+        ws.onopen = () => {
+            connectionStatus = "Connected";
+            reconnectAttempts = 0; // Reset attempts on successful connection
+            console.log("WebSocket connected");
+        };
+
+        ws.onclose = (event) => {
+            connectionStatus = "Disconnected";
+            console.log("WebSocket closed:", event.code, event.reason);
+            // Only attempt reconnect if it wasn't a clean close (code 1000)
+            if (event.code !== 1000) {
+                handleReconnect();
+            }
+        };
+
+        ws.onerror = (error) => {
+            connectionStatus = "Error";
+            console.error("WebSocket error:", error);
+        };
+
+        ws.onmessage = (event) => {
+            try {
+                const data = JSON.parse(event.data);
+                response = data.text;
+                addAssistantMessage(data.text);
+
+                if (data.audio) {
+                    fetch(`http://localhost:3002/${data.audio}`)
+                        .then((res) => {
+                            if (res.ok) {
+                                return res.blob();
+                            }
+                            throw new Error("Failed to fetch audio");
+                        })
+                        .then((blob) => {
+                            audio = URL.createObjectURL(blob);
+                            // Autoplay the audio after a short delay to ensure element is ready
+                            setTimeout(() => {
+                                if (audioElement) {
+                                    audioElement.play().catch((error) => {
+                                        console.error(
+                                            "Autoplay failed:",
+                                            error,
+                                        );
+                                    });
+                                }
+                            }, 100);
+                        })
+                        .catch((error) => {
+                            console.error("Error fetching audio:", error);
+                        });
+                }
+            } catch (error) {
+                console.error("Error parsing response:", error);
+                response = event.data; // Show raw response if JSON parsing fails
+                addAssistantMessage(event.data);
+            }
+        };
+    };
+
+    const handleReconnect = () => {
+        if (reconnectTimeout) {
+            clearTimeout(reconnectTimeout);
+        }
+
+        reconnectAttempts++;
+        const delay = Math.min(
+            baseReconnectDelay * Math.pow(2, reconnectAttempts - 1),
+            maxReconnectDelay,
+        ); // Exponential backoff with cap
+        connectionStatus = "Reconnecting...";
+
+        console.log(
+            `Attempting to reconnect in ${delay}ms (attempt ${reconnectAttempts})`,
+        );
+
+        reconnectTimeout = setTimeout(() => {
+            connect();
+        }, delay);
+    };
+
+    // Initialize connection
+    connect();
 
     const handleSend = () => {
         if (ws.readyState === WebSocket.OPEN) {
@@ -35,54 +133,17 @@
         }
     };
 
-    ws.onmessage = (event) => {
-        try {
-            const data = JSON.parse(event.data);
-            response = data.text;
-            addAssistantMessage(data.text);
+    // Cleanup on component destroy
+    import { onDestroy } from "svelte";
 
-            if (data.audio) {
-                fetch(`http://localhost:3002/${data.audio}`)
-                    .then((res) => {
-                        if (res.ok) {
-                            return res.blob();
-                        }
-                        throw new Error("Failed to fetch audio");
-                    })
-                    .then((blob) => {
-                        audio = URL.createObjectURL(blob);
-                        // Autoplay the audio after a short delay to ensure element is ready
-                        setTimeout(() => {
-                            if (audioElement) {
-                                audioElement.play().catch((error) => {
-                                    console.error("Autoplay failed:", error);
-                                });
-                            }
-                        }, 100);
-                    })
-                    .catch((error) => {
-                        console.error("Error fetching audio:", error);
-                    });
-            }
-        } catch (error) {
-            console.error("Error parsing response:", error);
-            response = event.data; // Show raw response if JSON parsing fails
-            addAssistantMessage(event.data);
+    onDestroy(() => {
+        if (reconnectTimeout) {
+            clearTimeout(reconnectTimeout);
         }
-    };
-
-    ws.onopen = () => {
-        connectionStatus = "Connected";
-    };
-
-    ws.onclose = () => {
-        connectionStatus = "Disconnected";
-    };
-
-    ws.onerror = (error) => {
-        connectionStatus = "Error";
-        console.error("WebSocket error:", error);
-    };
+        if (ws && ws.readyState === WebSocket.OPEN) {
+            ws.close(1000, "Component destroyed");
+        }
+    });
 </script>
 
 <div class="app">
@@ -211,5 +272,14 @@
     .input-section textarea {
         width: 100%;
         margin-bottom: 10px;
+    }
+
+    .status {
+        margin: 10px 0;
+        padding: 10px;
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
     }
 </style>
