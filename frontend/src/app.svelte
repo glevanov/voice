@@ -1,285 +1,195 @@
 <script>
-    import "./app.css";
-    import { get } from "svelte/store";
-    import {
-        messages,
-        addUserMessage,
-        addAssistantMessage,
-        clearMessages,
-    } from "./store/messages.js";
+  import { onDestroy } from "svelte";
+  import "./app.css";
+  import { get } from "svelte/store";
+  import {
+    messages,
+    addUserMessage,
+    addAssistantMessage,
+    clearMessages,
+  } from "./store/messages.js";
+  import { websocketStore, connectionStatus } from "./store/websocket";
+  import { play, cleanup } from "./service/audio.js";
 
-    let text = "";
-    let response = "";
-    let audio = null;
-    let audioElement = null;
-    let connectionStatus = "Connecting...";
-    let ws = null;
-    let reconnectTimeout = null;
-    let reconnectAttempts = 0;
-    const maxReconnectDelay = 30000; // Cap at 30 seconds
-    const baseReconnectDelay = 1000; // Start with 1 second
+  let text = "";
+  let response = "";
+  let audio = null;
+  let audioElement = null;
 
-    const connect = () => {
-        try {
-            ws = new WebSocket("ws://localhost:3002/ws");
-            setupWebSocketHandlers();
-        } catch (error) {
-            console.error("Failed to create WebSocket:", error);
-            handleReconnect();
-        }
-    };
+  websocketStore.connect();
 
-    const setupWebSocketHandlers = () => {
-        ws.onopen = () => {
-            connectionStatus = "Connected";
-            reconnectAttempts = 0; // Reset attempts on successful connection
-            console.log("WebSocket connected");
-        };
+  websocketStore.onMessage((event) => {
+    try {
+      const data = JSON.parse(event.data);
+      response = data.text;
+      addAssistantMessage(data.text);
 
-        ws.onclose = (event) => {
-            connectionStatus = "Disconnected";
-            console.log("WebSocket closed:", event.code, event.reason);
-            // Only attempt reconnect if it wasn't a clean close (code 1000)
-            if (event.code !== 1000) {
-                handleReconnect();
-            }
-        };
+      if (data.audio) {
+        play(audioElement, data.audio)
+          .then((audioUrl) => {
+            audio = audioUrl;
+          })
+          .catch((error) => {
+            console.error("Error playing audio:", error);
+          });
+      }
+    } catch (error) {
+      console.error("Error parsing response:", error);
+      response = event.data;
+      addAssistantMessage(event.data);
+    }
+  });
 
-        ws.onerror = (error) => {
-            connectionStatus = "Error";
-            console.error("WebSocket error:", error);
-        };
+  function handleMessageSend() {
+    const userMessage = text;
+    addUserMessage(userMessage);
 
-        ws.onmessage = (event) => {
-            try {
-                const data = JSON.parse(event.data);
-                response = data.text;
-                addAssistantMessage(data.text);
+    const currentMessages = get(messages);
+    const payload = { messages: currentMessages };
 
-                if (data.audio) {
-                    fetch(`http://localhost:3002/${data.audio}`)
-                        .then((res) => {
-                            if (res.ok) {
-                                return res.blob();
-                            }
-                            throw new Error("Failed to fetch audio");
-                        })
-                        .then((blob) => {
-                            audio = URL.createObjectURL(blob);
-                            // Autoplay the audio after a short delay to ensure element is ready
-                            setTimeout(() => {
-                                if (audioElement) {
-                                    audioElement.play().catch((error) => {
-                                        console.error(
-                                            "Autoplay failed:",
-                                            error,
-                                        );
-                                    });
-                                }
-                            }, 100);
-                        })
-                        .catch((error) => {
-                            console.error("Error fetching audio:", error);
-                        });
-                }
-            } catch (error) {
-                console.error("Error parsing response:", error);
-                response = event.data; // Show raw response if JSON parsing fails
-                addAssistantMessage(event.data);
-            }
-        };
-    };
+    const sent = websocketStore.send(payload);
+    if (!sent) {
+      alert("WebSocket connection is not open");
+    }
+    text = "";
+  }
 
-    const handleReconnect = () => {
-        if (reconnectTimeout) {
-            clearTimeout(reconnectTimeout);
-        }
-
-        reconnectAttempts++;
-        const delay = Math.min(
-            baseReconnectDelay * Math.pow(2, reconnectAttempts - 1),
-            maxReconnectDelay,
-        ); // Exponential backoff with cap
-        connectionStatus = "Reconnecting...";
-
-        console.log(
-            `Attempting to reconnect in ${delay}ms (attempt ${reconnectAttempts})`,
-        );
-
-        reconnectTimeout = setTimeout(() => {
-            connect();
-        }, delay);
-    };
-
-    // Initialize connection
-    connect();
-
-    const handleSend = () => {
-        if (ws.readyState === WebSocket.OPEN) {
-            const userMessage = text;
-            addUserMessage(userMessage);
-
-            // Get current messages (which now includes the new user message)
-            const currentMessages = get(messages);
-
-            // Send complete chat history
-            const payload = {
-                messages: currentMessages,
-            };
-            ws.send(JSON.stringify(payload));
-            text = "";
-        } else {
-            alert("WebSocket connection is not open");
-        }
-    };
-
-    // Cleanup on component destroy
-    import { onDestroy } from "svelte";
-
-    onDestroy(() => {
-        if (reconnectTimeout) {
-            clearTimeout(reconnectTimeout);
-        }
-        if (ws && ws.readyState === WebSocket.OPEN) {
-            ws.close(1000, "Component destroyed");
-        }
-    });
+  onDestroy(() => {
+    websocketStore.disconnect();
+    cleanup();
+  });
 </script>
 
 <div class="app">
-    <h1>Voice Assistant</h1>
-    <div class="status">Status: {connectionStatus}</div>
+  <h1>Voice Assistant</h1>
+  <div class="status">Status: {$connectionStatus}</div>
 
-    <div class="chat-history">
-        <div class="chat-header">
-            <h2>Chat History</h2>
-            <button on:click={clearMessages} class="clear-btn"
-                >Clear History</button
-            >
-        </div>
-        <div class="messages">
-            {#each $messages as message}
-                <div class="message {message.role}">
-                    <div class="role">
-                        {message.role === "user" ? "You" : "Assistant"}:
-                    </div>
-                    <div class="content">{message.content}</div>
-                </div>
-            {/each}
-            {#if $messages.length === 0}
-                <div class="no-messages">No messages yet...</div>
-            {/if}
-        </div>
+  <div class="chat-history">
+    <div class="chat-header">
+      <h2>Chat History</h2>
+      <button on:click={clearMessages} class="clear-btn">Clear History</button>
     </div>
-
-    <div class="input-section">
-        <textarea bind:value={text} placeholder="Type your message here..."
-        ></textarea>
-        <button
-            on:click={handleSend}
-            disabled={connectionStatus !== "Connected"}>Send</button
-        >
+    <div class="messages">
+      {#each $messages as message}
+        <div class="message {message.role}">
+          <div class="role">
+            {message.role === "user" ? "You" : "Assistant"}:
+          </div>
+          <div class="content">{message.content}</div>
+        </div>
+      {/each}
+      {#if $messages.length === 0}
+        <div class="no-messages">No messages yet...</div>
+      {/if}
     </div>
+  </div>
 
-    {#if response}
-        <h2>Latest Response:</h2>
-        <div class="response">{response}</div>
-    {/if}
+  <div class="input-section">
+    <textarea bind:value={text} placeholder="Type your message here..."
+    ></textarea>
+    <button
+      on:click={handleMessageSend}
+      disabled={$connectionStatus !== "Connected"}>Send</button
+    >
+  </div>
 
-    {#if audio}
-        <audio bind:this={audioElement} controls src={audio} />
-    {/if}
+  {#if response}
+    <h2>Latest Response:</h2>
+    <div class="response">{response}</div>
+  {/if}
+
+  <audio bind:this={audioElement} controls src={audio} />
 </div>
 
 <style>
-    .chat-history {
-        margin: 20px 0;
-        border: 1px solid #ccc;
-        border-radius: 8px;
-        max-height: 400px;
-        overflow-y: auto;
-    }
+  .chat-history {
+    margin: 20px 0;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    max-height: 400px;
+    overflow-y: auto;
+  }
 
-    .chat-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 10px 15px;
-        border-bottom: 1px solid #eee;
-        background-color: #f8f9fa;
-    }
+  .chat-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 15px;
+    border-bottom: 1px solid #eee;
+    background-color: #f8f9fa;
+  }
 
-    .chat-header h2 {
-        margin: 0;
-        font-size: 1.2em;
-    }
+  .chat-header h2 {
+    margin: 0;
+    font-size: 1.2em;
+  }
 
-    .clear-btn {
-        padding: 5px 10px;
-        background-color: #dc3545;
-        color: white;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 0.9em;
-    }
+  .clear-btn {
+    padding: 5px 10px;
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9em;
+  }
 
-    .clear-btn:hover {
-        background-color: #c82333;
-    }
+  .clear-btn:hover {
+    background-color: #c82333;
+  }
 
-    .messages {
-        padding: 15px;
-    }
+  .messages {
+    padding: 15px;
+  }
 
-    .message {
-        margin-bottom: 15px;
-        padding: 10px;
-        border-radius: 8px;
-    }
+  .message {
+    margin-bottom: 15px;
+    padding: 10px;
+    border-radius: 8px;
+  }
 
-    .message.user {
-        background-color: #e3f2fd;
-        margin-left: 20px;
-    }
+  .message.user {
+    background-color: #e3f2fd;
+    margin-left: 20px;
+  }
 
-    .message.assistant {
-        background-color: #f1f8e9;
-        margin-right: 20px;
-    }
+  .message.assistant {
+    background-color: #f1f8e9;
+    margin-right: 20px;
+  }
 
-    .role {
-        font-weight: bold;
-        margin-bottom: 5px;
-        color: #555;
-    }
+  .role {
+    font-weight: bold;
+    margin-bottom: 5px;
+    color: #555;
+  }
 
-    .content {
-        white-space: pre-wrap;
-    }
+  .content {
+    white-space: pre-wrap;
+  }
 
-    .no-messages {
-        text-align: center;
-        color: #666;
-        font-style: italic;
-        padding: 20px;
-    }
+  .no-messages {
+    text-align: center;
+    color: #666;
+    font-style: italic;
+    padding: 20px;
+  }
 
-    .input-section {
-        margin: 20px 0;
-    }
+  .input-section {
+    margin: 20px 0;
+  }
 
-    .input-section textarea {
-        width: 100%;
-        margin-bottom: 10px;
-    }
+  .input-section textarea {
+    width: 100%;
+    margin-bottom: 10px;
+  }
 
-    .status {
-        margin: 10px 0;
-        padding: 10px;
-        border-radius: 4px;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
+  .status {
+    margin: 10px 0;
+    padding: 10px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
 </style>
