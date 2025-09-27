@@ -10,8 +10,8 @@
   import { websocketStore, connectionStatus } from "./store/websocket";
   import { play, cleanup } from "./service/audio.js";
   import ChatHistory from "./components/chat-history/chat-history.svelte";
+  import InputSection from "./components/input-section/input-section.svelte";
 
-  let text = "";
   let response = "";
   let audio: string | null = null;
   let audioElement: HTMLAudioElement | null = null;
@@ -40,20 +40,6 @@
     }
   });
 
-  function handleMessageSend(): void {
-    const userMessage = text;
-    addUserMessage(userMessage);
-
-    const currentMessages = get(messages);
-    const payload = { messages: currentMessages };
-
-    const sent = websocketStore.send(payload);
-    if (!sent) {
-      alert("WebSocket connection is not open");
-    }
-    text = "";
-  }
-
   onDestroy(() => {
     websocketStore.disconnect();
     cleanup();
@@ -65,14 +51,7 @@
 
   <ChatHistory />
 
-  <div class="input-section">
-    <textarea bind:value={text} placeholder="Type your message here..."
-    ></textarea>
-    <button
-      on:click={handleMessageSend}
-      disabled={$connectionStatus !== "Connected"}>Send</button
-    >
-  </div>
+  <InputSection />
 
   {#if response}
     <h2>Latest Response:</h2>
@@ -83,15 +62,6 @@
 </div>
 
 <style>
-  .input-section {
-    margin: 20px 0;
-  }
-
-  .input-section textarea {
-    width: 100%;
-    margin-bottom: 10px;
-  }
-
   .status {
     margin: 10px 0;
     padding: 10px;
