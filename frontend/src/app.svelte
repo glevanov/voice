@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { onDestroy } from "svelte";
   import "./app.css";
   import { get } from "svelte/store";
@@ -13,12 +13,12 @@
 
   let text = "";
   let response = "";
-  let audio = null;
-  let audioElement = null;
+  let audio: string | null = null;
+  let audioElement: HTMLAudioElement | null = null;
 
   websocketStore.connect();
 
-  websocketStore.onMessage((event) => {
+  websocketStore.onMessage((event: MessageEvent): void => {
     try {
       const data = JSON.parse(event.data);
       response = data.text;
@@ -40,7 +40,7 @@
     }
   });
 
-  function handleMessageSend() {
+  function handleMessageSend(): void {
     const userMessage = text;
     addUserMessage(userMessage);
 
@@ -61,7 +61,6 @@
 </script>
 
 <div class="app">
-  <h1>Voice Assistant</h1>
   <div class="status">Status: {$connectionStatus}</div>
 
   <div class="chat-history">

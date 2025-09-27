@@ -1,6 +1,9 @@
-let currentAudio = null;
+let currentAudio: string | null = null;
 
-export const play = async (audioElement, audioPath) => {
+export const play = async (
+  audioElement: HTMLAudioElement | null,
+  audioPath: string,
+) => {
   try {
     const response = await fetch(`http://localhost:3002/${audioPath}`);
     if (!response.ok) {

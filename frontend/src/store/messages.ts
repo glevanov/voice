@@ -1,8 +1,14 @@
 import { writable } from "svelte/store";
 
-export const messages = writable([]);
+export type Message = {
+  role: "user" | "assistant";
+  content: string;
+  timestamp: string;
+};
 
-export function addUserMessage(content) {
+export const messages = writable<Message[]>([]);
+
+export function addUserMessage(content: string) {
   messages.update((msgs) => [
     ...msgs,
     {
@@ -13,7 +19,7 @@ export function addUserMessage(content) {
   ]);
 }
 
-export function addAssistantMessage(content) {
+export function addAssistantMessage(content: string) {
   messages.update((msgs) => [
     ...msgs,
     {

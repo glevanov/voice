@@ -7,19 +7,22 @@ settings:
 importers:
   .:
     dependencies:
-      prettier:
-        specifier: 3.6.2
-        version: 3.6.2
-      prettier-plugin-svelte:
-        specifier: 3.4.0
-        version: 3.4.0(prettier@3.6.2)(svelte@4.2.0)
-    devDependencies:
       "@sveltejs/vite-plugin-svelte":
         specifier: 3.0.0
         version: 3.0.0(svelte@4.2.0)(vite@5.0.0)
       svelte:
         specifier: 4.2.0
         version: 4.2.0
+    devDependencies:
+      prettier:
+        specifier: 3.6.2
+        version: 3.6.2
+      prettier-plugin-svelte:
+        specifier: 3.4.0
+        version: 3.4.0(prettier@3.6.2)(svelte@4.2.0)
+      typescript:
+        specifier: 5.9.2
+        version: 5.9.2
       vite:
         specifier: 5.0.0
         version: 5.0.0
@@ -655,6 +658,14 @@ packages:
       }
     engines: { node: ">=16" }
 
+  typescript@5.9.2:
+    resolution:
+      {
+        integrity: sha512-CWBzXQrc/qOkhidw1OzBTQuYRbfyxDXJMVJ1XNwUHGROVmuaeiEm3OslpZ1RV96d7SKKjZKrSJu3+t/xlw3R9A==,
+      }
+    engines: { node: ">=14.17" }
+    hasBin: true
+
   vite@5.0.0:
     resolution:
       {
@@ -1023,6 +1034,8 @@ snapshots:
       locate-character: 3.0.0
       magic-string: 0.30.19
       periscopic: 3.1.0
+
+  typescript@5.9.2: {}
 
   vite@5.0.0:
     dependencies:

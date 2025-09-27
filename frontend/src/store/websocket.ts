@@ -1,4 +1,5 @@
 import { writable, derived } from "svelte/store";
+import type { Message } from "./messages";
 
 export const connectionStatus = writable("Connecting...");
 export const isConnected = derived(
@@ -6,14 +7,14 @@ export const isConnected = derived(
   ($status) => $status === "Connected",
 );
 
-let ws = null;
-let reconnectTimeout = null;
+let ws: WebSocket | null = null;
+let reconnectTimeout: number | null = null;
 let reconnectAttempts = 0;
 const maxReconnectDelay = 30000;
 const baseReconnectDelay = 1000;
 
 export function createWebSocketStore() {
-  const { subscribe, set, update } = writable(null);
+  const { subscribe, set, update } = writable<WebSocket | null>(null);
 
   const connect = () => {
     try {
@@ -27,6 +28,10 @@ export function createWebSocketStore() {
   };
 
   const setupWebSocketHandlers = () => {
+    if (!ws) {
+      console.warn("WebSocket unavailable");
+      return;
+    }
     ws.onopen = () => {
       connectionStatus.set("Connected");
       reconnectAttempts = 0;
@@ -77,7 +82,7 @@ export function createWebSocketStore() {
     }
   };
 
-  const send = (data) => {
+  const send = (data: { messages: Message[] }) => {
     if (ws && ws.readyState === WebSocket.OPEN) {
       ws.send(JSON.stringify(data));
       return true;
@@ -85,7 +90,7 @@ export function createWebSocketStore() {
     return false;
   };
 
-  const onMessage = (callback) => {
+  const onMessage = (callback: (event: MessageEvent) => void) => {
     if (ws) {
       ws.onmessage = callback;
     }
