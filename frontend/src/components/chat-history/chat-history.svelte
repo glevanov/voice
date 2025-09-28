@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { messages, clearMessages } from "../../store/messages.js";
+  import { messages, clearMessages } from "../../store/messages";
 </script>
 
 <div class="chat-history">

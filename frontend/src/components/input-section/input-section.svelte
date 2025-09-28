@@ -1,6 +1,6 @@
 <script lang="ts">
   import { get } from "svelte/store";
-  import { messages, addUserMessage } from "../../store/messages.js";
+  import { messages, addUserMessage } from "../../store/messages";
   import { websocketStore, connectionStatus } from "../../store/websocket";
 
   let value: string = "";
@@ -33,7 +33,7 @@
     const currentMessages = get(messages);
     const payload = { messages: currentMessages };
 
-    const sent = websocketStore.send(payload);
+    const sent = websocketStore.sendMessages(payload);
     if (!sent) {
       alert("WebSocket connection is not open");
     }

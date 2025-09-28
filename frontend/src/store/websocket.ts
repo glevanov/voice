@@ -14,7 +14,7 @@ const maxReconnectDelay = 30000;
 const baseReconnectDelay = 1000;
 
 export function createWebSocketStore() {
-  const { subscribe, set, update } = writable<WebSocket | null>(null);
+  const { subscribe, set } = writable<WebSocket | null>(null);
 
   const connect = () => {
     try {
@@ -82,9 +82,17 @@ export function createWebSocketStore() {
     }
   };
 
-  const send = (data: { messages: Message[] }) => {
+  const sendMessages = (data: { messages: Message[] }) => {
     if (ws && ws.readyState === WebSocket.OPEN) {
       ws.send(JSON.stringify(data));
+      return true;
+    }
+    return false;
+  };
+
+  const sendVoice = (data: Blob) => {
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      ws.send(data);
       return true;
     }
     return false;
@@ -100,7 +108,8 @@ export function createWebSocketStore() {
     subscribe,
     connect,
     disconnect,
-    send,
+    sendMessages,
+    sendVoice,
     onMessage,
   };
 }
