@@ -12,8 +12,8 @@
   import ChatHistory from "./components/chat-history/chat-history.svelte";
   import InputSection from "./components/input-section/input-section.svelte";
   import VoiceRecorder from "./components/voice-recorder/voice-recorder.svelte";
+  import AudioElement from "./components/audio-element/audio-element.svelte";
 
-  let response = "";
   let audio: string | null = null;
   let audioElement: HTMLAudioElement | null = null;
 
@@ -22,7 +22,6 @@
   websocketStore.onMessage((event: MessageEvent): void => {
     try {
       const data = JSON.parse(event.data);
-      response = data.text;
 
       if (data.type === "user") {
         addUserMessage(data.text);
@@ -39,7 +38,6 @@
       }
     } catch (error) {
       console.error("Error parsing response:", error);
-      response = event.data;
       addAssistantMessage(event.data);
     }
   });
@@ -61,12 +59,7 @@
 
   <InputSection />
 
-  {#if response}
-    <h2>Latest Response:</h2>
-    <div class="response">{response}</div>
-  {/if}
-
-  <audio bind:this={audioElement} controls src={audio} />
+  <AudioElement bind:audioElement {audio} />
 </div>
 
 <style>
