@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onDestroy } from "svelte";
   import { websocketStore } from "../../store/websocket";
+  import { messages } from "../../store/messages";
 
   let isRecording = false;
   let mediaRecorder: MediaRecorder | null = null;
@@ -25,7 +26,7 @@
           track.stop();
         }
 
-        websocketStore.sendVoice(blob);
+        await websocketStore.sendVoice(blob, $messages);
         mediaRecorder = null;
         pulseAnimation = false;
       };

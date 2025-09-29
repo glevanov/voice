@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -57,13 +58,18 @@ type WebSocketMessage struct {
 	Messages []Message `json:"messages"`
 }
 
+type AudioMessage struct {
+	Type      string    `json:"type"`
+	AudioData string    `json:"audioData"`
+	Messages  []Message `json:"messages"`
+}
+
 type TranscriptionResponse struct {
 	Type string `json:"type"`
 	Text string `json:"text"`
 }
 
 func callLLMAPI(messages []Message) (string, error) {
-	// Prepend the developer message
 	fullMessages := []Message{
 		{
 			Role:    "developer",
@@ -110,13 +116,17 @@ func callLLMAPI(messages []Message) (string, error) {
 	return chatResponse.Choices[0].Message.Content, nil
 }
 
-func saveAudioBlob(data []byte) error {
+func saveAudioBlob(audioData string) error {
+	data, err := base64.StdEncoding.DecodeString(audioData)
+	if err != nil {
+		return fmt.Errorf("failed to decode base64 audio data: %v", err)
+	}
 	log.Printf("Processing audio blob of %d bytes", len(data))
 
 	tempFile := filepath.Join("../audio", fmt.Sprintf("temp_%d.webm", time.Now().UnixNano()))
 	log.Printf("Creating temporary file: %s", tempFile)
 
-	err := os.WriteFile(tempFile, data, 0644)
+	err = os.WriteFile(tempFile, data, 0644)
 	if err != nil {
 		return fmt.Errorf("failed to write temporary audio file: %v", err)
 	}
@@ -188,16 +198,18 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 	log.Println("Client connected")
 
 	for {
-		messageType, message, err := conn.ReadMessage()
+		_, message, err := conn.ReadMessage()
 		if err != nil {
 			log.Printf("Error reading message: %v", err)
 			break
 		}
 
-		if messageType == websocket.BinaryMessage {
-			log.Printf("Received audio blob of %d bytes", len(message))
+		// Check if this is an audio message with chat history
+		var audioMsg AudioMessage
+		if err := json.Unmarshal(message, &audioMsg); err == nil && audioMsg.Type == "audio" {
+			log.Printf("Received audio message with %d bytes of audio data", len(audioMsg.AudioData))
 
-			err = saveAudioBlob(message)
+			err = saveAudioBlob(audioMsg.AudioData)
 			if err != nil {
 				log.Printf("Error saving audio blob: %v", err)
 				errorMsg := fmt.Sprintf("Error processing audio: %v", err)
@@ -231,6 +243,48 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 				break
 			}
 
+			userMessage := Message{
+				Role:    "user",
+				Content: transcribedText,
+			}
+			fullMessages := append(audioMsg.Messages, userMessage)
+
+			llmOutput, err := callLLMAPI(fullMessages)
+			if err != nil {
+				log.Printf("LLM error: %v", err)
+				errorMsg := fmt.Sprintf("Error processing with LLM: %v", err)
+				conn.WriteMessage(websocket.TextMessage, []byte(errorMsg))
+				continue
+			}
+
+			log.Printf("LLM: %s", llmOutput)
+
+			piperCmd := fmt.Sprintf(`echo "%s" | ../piper/piper --model ../piper/%s --output_file ../audio/answer.wav`, llmOutput, PIPER_MODEL)
+			ttsCmd := exec.Command("bash", "-c", piperCmd)
+			err = ttsCmd.Run()
+			if err != nil {
+				log.Printf("Piper error: %v", err)
+				errorMsg := fmt.Sprintf("Error generating speech: %v", err)
+				conn.WriteMessage(websocket.TextMessage, []byte(errorMsg))
+				continue
+			}
+
+			assistantResponse := Response{
+				Type: "assistant",
+				Text: llmOutput,
+			}
+			assistantResponseJSON, err := json.Marshal(assistantResponse)
+			if err != nil {
+				log.Printf("Error marshaling assistant response: %v", err)
+				continue
+			}
+
+			err = conn.WriteMessage(websocket.TextMessage, assistantResponseJSON)
+			if err != nil {
+				log.Printf("Error sending assistant response: %v", err)
+				break
+			}
+
 			continue
 		}
 
@@ -240,12 +294,11 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 		var wsMessage WebSocketMessage
 		err = json.Unmarshal(message, &wsMessage)
 		if err != nil {
-			log.Printf("Error parsing message: %v", err)
+			log.Printf("Error parsing text message: %v", err)
 			conn.WriteMessage(websocket.TextMessage, []byte("Error parsing your request."))
 			continue
 		}
 
-		// Call LLM API with full chat history
 		llmOutput, err := callLLMAPI(wsMessage.Messages)
 		if err != nil {
 			log.Printf("LLM error: %v", err)
@@ -255,7 +308,6 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 
 		log.Printf("LLM: %s", llmOutput)
 
-		// Run Piper TTS
 		piperCmd := fmt.Sprintf(`echo "%s" | ../piper/piper --model ../piper/%s --output_file ../audio/answer.wav`, llmOutput, PIPER_MODEL)
 		ttsCmd := exec.Command("bash", "-c", piperCmd)
 		err = ttsCmd.Run()
@@ -265,7 +317,6 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 
-		// Send response
 		response := Response{
 			Type: "assistant",
 			Text: llmOutput,
@@ -285,7 +336,6 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 }
 
 func serveAudio(w http.ResponseWriter, r *http.Request) {
-	// Enable CORS
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS")
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
@@ -301,19 +351,15 @@ func serveAudio(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Construct the full path to the audio file
 	audioPath := filepath.Join("../audio", filename)
 
-	// Check if file exists
 	if _, err := os.Stat(audioPath); os.IsNotExist(err) {
 		http.Error(w, "Audio file not found", http.StatusNotFound)
 		return
 	}
 
-	// Set appropriate content type for WAV files
 	w.Header().Set("Content-Type", "audio/wav")
 
-	// Serve the file
 	http.ServeFile(w, r, audioPath)
 }
 

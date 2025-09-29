@@ -90,10 +90,42 @@ export function createWebSocketStore() {
     return false;
   };
 
-  const sendVoice = (data: Blob) => {
+  const sendVoice = async (data: Blob, messages: Message[]) => {
     if (ws && ws.readyState === WebSocket.OPEN) {
-      ws.send(data);
-      return true;
+      try {
+        // Convert blob to base64
+        const reader = new FileReader();
+        const base64Promise = new Promise<string>((resolve, reject) => {
+          reader.onload = () => {
+            const arrayBuffer = reader.result as ArrayBuffer;
+            const bytes = new Uint8Array(arrayBuffer);
+            let binary = "";
+            for (let i = 0; i < bytes.byteLength; i++) {
+              binary += String.fromCharCode(bytes[i]);
+            }
+            resolve(btoa(binary));
+          };
+          reader.onerror = reject;
+        });
+        reader.readAsArrayBuffer(data);
+
+        const base64Audio = await base64Promise;
+
+        const audioMessage = {
+          type: "audio",
+          audioData: base64Audio,
+          messages: messages.map((msg) => ({
+            role: msg.role,
+            content: msg.content,
+          })),
+        };
+
+        ws.send(JSON.stringify(audioMessage));
+        return true;
+      } catch (error) {
+        console.error("Error encoding audio:", error);
+        return false;
+      }
     }
     return false;
   };
