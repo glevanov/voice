@@ -23,10 +23,13 @@
     try {
       const data = JSON.parse(event.data);
       response = data.text;
-      addAssistantMessage(data.text);
 
-      if (data.audio) {
-        play(audioElement, data.audio)
+      if (data.type === "user") {
+        addUserMessage(data.text);
+      } else if (data.type === "assistant") {
+        addAssistantMessage(data.text);
+
+        play(audioElement, "answer.wav")
           .then((audioUrl) => {
             audio = audioUrl;
           })

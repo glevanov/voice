@@ -49,8 +49,8 @@ type ChatResponse struct {
 }
 
 type Response struct {
-	Text  string `json:"text"`
-	Audio string `json:"audio"`
+	Type string `json:"type"`
+	Text string `json:"text"`
 }
 
 type WebSocketMessage struct {
@@ -58,6 +58,7 @@ type WebSocketMessage struct {
 }
 
 type TranscriptionResponse struct {
+	Type string `json:"type"`
 	Text string `json:"text"`
 }
 
@@ -215,6 +216,7 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 			}
 
 			transcriptionResponse := TranscriptionResponse{
+				Type: "user",
 				Text: transcribedText,
 			}
 			responseJSON, err := json.Marshal(transcriptionResponse)
@@ -265,8 +267,8 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 
 		// Send response
 		response := Response{
-			Text:  llmOutput,
-			Audio: "answer.wav",
+			Type: "assistant",
+			Text: llmOutput,
 		}
 		responseJSON, err := json.Marshal(response)
 		if err != nil {
