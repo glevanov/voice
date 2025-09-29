@@ -11,6 +11,7 @@
   import { play, cleanup } from "./service/audio.js";
   import ChatHistory from "./components/chat-history/chat-history.svelte";
   import InputSection from "./components/input-section/input-section.svelte";
+  import VoiceRecorder from "./components/voice-recorder/voice-recorder.svelte";
 
   let response = "";
   let audio: string | null = null;
@@ -51,6 +52,10 @@
 
   <ChatHistory />
 
+  <div class="recorder-section">
+    <VoiceRecorder />
+  </div>
+
   <InputSection />
 
   {#if response}
@@ -69,5 +74,11 @@
     display: flex;
     align-items: center;
     gap: 10px;
+  }
+
+  .recorder-section {
+    display: flex;
+    justify-content: center;
+    margin: 10px 0;
   }
 </style>
