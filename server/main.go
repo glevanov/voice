@@ -11,6 +11,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/gorilla/websocket"
 )
@@ -55,6 +56,9 @@ type Response struct {
 type WebSocketMessage struct {
 	Messages []Message `json:"messages"`
 }
+
+// TODO use this to transcribe audio input
+// ./build/bin/whisper-cli --no-prints --no-timestamps --language sv --model models/ggml-base.bin --file ../question.wav
 
 func callLLMAPI(messages []Message) (string, error) {
 	// Prepend the developer message
@@ -104,6 +108,46 @@ func callLLMAPI(messages []Message) (string, error) {
 	return chatResponse.Choices[0].Message.Content, nil
 }
 
+func saveAudioBlob(data []byte) error {
+	log.Printf("Processing audio blob of %d bytes", len(data))
+
+	tempFile := filepath.Join("../audio", fmt.Sprintf("temp_%d.webm", time.Now().UnixNano()))
+	log.Printf("Creating temporary file: %s", tempFile)
+
+	err := os.WriteFile(tempFile, data, 0644)
+	if err != nil {
+		return fmt.Errorf("failed to write temporary audio file: %v", err)
+	}
+	defer func() {
+		if removeErr := os.Remove(tempFile); removeErr != nil {
+			log.Printf("Warning: failed to remove temp file %s: %v", tempFile, removeErr)
+		}
+	}()
+
+	outputFile := "../audio/question.wav"
+	log.Printf("Converting %s to %s using ffmpeg", tempFile, outputFile)
+
+	cmd := exec.Command("ffmpeg", "-y", "-i", tempFile, "-ar", "22050", "-ac", "1", "-sample_fmt", "s16", outputFile)
+
+	var stdout, stderr bytes.Buffer
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+
+	err = cmd.Run()
+	if err != nil {
+		log.Printf("ffmpeg stdout: %s", stdout.String())
+		log.Printf("ffmpeg stderr: %s", stderr.String())
+		return fmt.Errorf("ffmpeg conversion failed: %v", err)
+	}
+
+	if _, err := os.Stat(outputFile); os.IsNotExist(err) {
+		return fmt.Errorf("output file %s was not created", outputFile)
+	}
+
+	log.Printf("Audio blob successfully converted and saved to %s", outputFile)
+	return nil
+}
+
 func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
@@ -115,10 +159,25 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 	log.Println("Client connected")
 
 	for {
-		_, message, err := conn.ReadMessage()
+		messageType, message, err := conn.ReadMessage()
 		if err != nil {
 			log.Printf("Error reading message: %v", err)
 			break
+		}
+
+		if messageType == websocket.BinaryMessage {
+			log.Printf("Received audio blob of %d bytes", len(message))
+
+			err = saveAudioBlob(message)
+			if err != nil {
+				log.Printf("Error saving audio blob: %v", err)
+				errorMsg := fmt.Sprintf("Error processing audio: %v", err)
+				conn.WriteMessage(websocket.TextMessage, []byte(errorMsg))
+				continue
+			}
+
+			log.Printf("Audio successfully processed and saved to question.wav")
+			continue
 		}
 
 		log.Printf("Received: %s", message)
