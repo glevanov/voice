@@ -57,8 +57,9 @@ type WebSocketMessage struct {
 	Messages []Message `json:"messages"`
 }
 
-// TODO use this to transcribe audio input
-// ./build/bin/whisper-cli --no-prints --no-timestamps --language sv --model models/ggml-base.bin --file ../question.wav
+type TranscriptionResponse struct {
+	Text string `json:"text"`
+}
 
 func callLLMAPI(messages []Message) (string, error) {
 	// Prepend the developer message
@@ -148,6 +149,33 @@ func saveAudioBlob(data []byte) error {
 	return nil
 }
 
+func transcribeAudio(audioPath string) (string, error) {
+	log.Printf("Transcribing audio file: %s", audioPath)
+
+	cmd := exec.Command("../../whisper.cpp/build/bin/whisper-cli",
+		"--no-prints",
+		"--no-timestamps",
+		"--language", "auto",
+		"--model", "../../whisper.cpp/models/ggml-base.bin",
+		"--file", audioPath)
+
+	var stdout, stderr bytes.Buffer
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+
+	err := cmd.Run()
+	if err != nil {
+		log.Printf("whisper-cli stdout: %s", stdout.String())
+		log.Printf("whisper-cli stderr: %s", stderr.String())
+		return "", fmt.Errorf("whisper-cli transcription failed: %v", err)
+	}
+
+	transcribedText := strings.TrimSpace(stdout.String())
+	log.Printf("Transcribed text: %s", transcribedText)
+
+	return transcribedText, nil
+}
+
 func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
@@ -177,6 +205,30 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 			}
 
 			log.Printf("Audio successfully processed and saved to question.wav")
+
+			transcribedText, err := transcribeAudio("../audio/question.wav")
+			if err != nil {
+				log.Printf("Error transcribing audio: %v", err)
+				errorMsg := fmt.Sprintf("Error transcribing audio: %v", err)
+				conn.WriteMessage(websocket.TextMessage, []byte(errorMsg))
+				continue
+			}
+
+			transcriptionResponse := TranscriptionResponse{
+				Text: transcribedText,
+			}
+			responseJSON, err := json.Marshal(transcriptionResponse)
+			if err != nil {
+				log.Printf("Error marshaling transcription response: %v", err)
+				continue
+			}
+
+			err = conn.WriteMessage(websocket.TextMessage, responseJSON)
+			if err != nil {
+				log.Printf("Error sending transcription: %v", err)
+				break
+			}
+
 			continue
 		}
 
