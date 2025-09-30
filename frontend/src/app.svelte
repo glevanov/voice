@@ -1,18 +1,14 @@
 <script lang="ts">
   import { onDestroy } from "svelte";
   import "./app.css";
-  import { get } from "svelte/store";
-  import {
-    messages,
-    addUserMessage,
-    addAssistantMessage,
-  } from "./store/messages.js";
-  import { websocketStore, connectionStatus } from "./store/websocket";
+  import { addUserMessage, addAssistantMessage } from "./store/messages.js";
+  import { websocketStore } from "./store/websocket";
   import { play, cleanup } from "./service/audio.js";
   import ChatHistory from "./components/chat-history/chat-history.svelte";
   import InputSection from "./components/input-section/input-section.svelte";
   import VoiceRecorder from "./components/voice-recorder/voice-recorder.svelte";
   import AudioElement from "./components/audio-element/audio-element.svelte";
+  import StatusIndicator from "./components/status-indicator/status-indicator.svelte";
 
   let audio: string | null = null;
   let audioElement: HTMLAudioElement | null = null;
@@ -49,32 +45,39 @@
 </script>
 
 <div class="app">
-  <div class="status">Status: {$connectionStatus}</div>
+  <div class="chat">
+    <StatusIndicator />
 
-  <ChatHistory />
+    <ChatHistory />
 
-  <div class="recorder-section">
     <VoiceRecorder />
+
+    <InputSection />
+
+    <AudioElement bind:audioElement {audio} />
   </div>
-
-  <InputSection />
-
-  <AudioElement bind:audioElement {audio} />
 </div>
 
 <style>
-  .status {
-    margin: 10px 0;
-    padding: 10px;
-    border-radius: 4px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  .recorder-section {
+  .app {
     display: flex;
     justify-content: center;
-    margin: 10px 0;
+    align-items: center;
+    height: 100svh;
+    width: 100vw;
+    padding: 20px;
+    box-sizing: border-box;
+  }
+
+  .chat {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: 1200px;
+    padding: 32px;
+    
+    background: var(--card-bg-color);
+    border-radius: 36px;
   }
 </style>
