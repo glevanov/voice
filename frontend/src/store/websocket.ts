@@ -1,7 +1,12 @@
 import { writable, derived } from "svelte/store";
 import type { Message } from "./messages";
 
-export type Status = "Connecting" | "Connected" | "Disconnected" | "Reconnecting" | "Error";
+export type Status =
+  | "Connecting"
+  | "Connected"
+  | "Disconnected"
+  | "Reconnecting"
+  | "Error";
 export const connectionStatus = writable<Status>("Connecting");
 export const isConnected = derived(
   connectionStatus,
