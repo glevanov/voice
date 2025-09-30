@@ -1,12 +1,14 @@
 <script lang="ts">
   import { onDestroy } from "svelte";
+
   import { websocketStore } from "../../store/websocket";
   import { messages } from "../../store/messages";
+  import RecordIcon from "./record-icon.svelte";
+  import StopIcon from "./stop-icon.svelte";
 
   let isRecording = false;
   let mediaRecorder: MediaRecorder | null = null;
   let chunks: Blob[] = [];
-  let pulseAnimation = false;
 
   async function startRecording() {
     try {
@@ -28,12 +30,10 @@
 
         await websocketStore.sendVoice(blob, $messages);
         mediaRecorder = null;
-        pulseAnimation = false;
       };
 
       mediaRecorder.start();
       isRecording = true;
-      pulseAnimation = true;
     } catch (error) {
       console.error("Error accessing microphone:", error);
       alert(
@@ -64,63 +64,56 @@
 
 <button
   on:click={handleClick}
-  class:recording={isRecording}
-  class:pulse={pulseAnimation}
+  class="round-button"
+  aria-label={isRecording ? "Stop recording" : "Start recording"}
 >
-  {#if isRecording}<span class="icon">⬤</span>{/if}
-  <span class="text">{isRecording ? "Stop Recording" : "Start Recording"}</span>
+  {#if isRecording}
+    <div class="pulse">
+      <StopIcon />
+    </div>
+  {:else}
+    <RecordIcon />
+  {/if}
 </button>
 
 <style>
-  button {
+  :root {
+    --bg-color: var(--purple-300);
+    @media (prefers-color-scheme: dark) {
+      --bg-color: var(--purple-200);
+    }
+  }
+
+  .round-button {
     display: flex;
     align-items: center;
-    gap: 8px;
-    min-width: 140px;
     justify-content: center;
-    padding: 12px 20px;
-    background-color: #007bff;
-    color: white;
+    width: 50px;
+    height: 50px;
+    box-sizing: border-box;
+
+    background-color: var(--bg-color);
     border: none;
-    border-radius: 4px;
-    font-size: 14px;
-    font-weight: 500;
+    border-radius: 50%;
+
+    color: var(--neutral-light);
+
+    transition: background-color 0.2s ease-in;
     cursor: pointer;
-    transition: background-color 0.2s ease;
-    white-space: nowrap;
-    height: fit-content;
-    width: fit-content;
   }
 
-  button:hover:not(:disabled) {
-    background-color: #0056b3;
+  .round-button:hover,
+  .round-button:focus-visible {
+    --bg-color: var(--purple-400);
+    @media (prefers-color-scheme: dark) {
+      --bg-color: var(--purple-100);
+    }
   }
 
-  button:disabled {
-    background-color: #6c757d;
-    cursor: not-allowed;
-    opacity: 0.6;
-  }
+  .pulse {
+    width: 24px;
+    height: 24px;
 
-  button:focus {
-    outline: none;
-    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
-  }
-
-  .icon {
-    font-size: 12px;
-    transition: color 0.2s ease;
-  }
-
-  .recording {
-    background-color: #dc3545 !important;
-  }
-
-  .recording:hover {
-    background-color: #bd2130 !important;
-  }
-
-  .pulse .icon {
     animation: pulse 1.5s infinite;
   }
 
