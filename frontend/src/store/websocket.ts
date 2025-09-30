@@ -1,7 +1,8 @@
 import { writable, derived } from "svelte/store";
 import type { Message } from "./messages";
 
-export const connectionStatus = writable("Connecting...");
+export type Status = "Connecting" | "Connected" | "Disconnected" | "Reconnecting" | "Error";
+export const connectionStatus = writable<Status>("Connecting");
 export const isConnected = derived(
   connectionStatus,
   ($status) => $status === "Connected",
@@ -62,7 +63,7 @@ export function createWebSocketStore() {
       baseReconnectDelay * Math.pow(2, reconnectAttempts - 1),
       maxReconnectDelay,
     );
-    connectionStatus.set("Reconnecting...");
+    connectionStatus.set("Reconnecting");
 
     console.log(
       `Attempting to reconnect in ${delay}ms (attempt ${reconnectAttempts})`,
