@@ -7,7 +7,6 @@
   import { play, cleanup } from "./service/audio.js";
   import ChatHistory from "./components/chat-history/chat-history.svelte";
   import InputSection from "./components/input-section/input-section.svelte";
-  import VoiceRecorder from "./components/voice-recorder/voice-recorder.svelte";
   import AudioElement from "./components/audio-element/audio-element.svelte";
   import ChatHeader from "./components/chat-header/chat-header.svelte";
 
@@ -48,13 +47,8 @@
 <div class="app">
   <div class="chat">
     <ChatHeader />
-
     <ChatHistory />
-
-    <VoiceRecorder />
-
     <InputSection />
-
     <AudioElement bind:audioElement {audio} />
   </div>
 </div>

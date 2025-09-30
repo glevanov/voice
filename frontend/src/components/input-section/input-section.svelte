@@ -1,7 +1,9 @@
 <script lang="ts">
   import { get } from "svelte/store";
+
   import { messages, addUserMessage } from "../../store/messages";
   import { websocketStore, connectionStatus } from "../../store/websocket";
+  import VoiceRecorder from "../voice-recorder/voice-recorder.svelte";
 
   let value: string = "";
 
@@ -21,7 +23,8 @@
     }
   }
 
-  function handleSubmit() {
+  function handleSubmit(event: SubmitEvent) {
+    event.preventDefault()
     if (value.trim()) {
       handleMessageSend(value);
     }
@@ -41,96 +44,61 @@
   }
 </script>
 
-<div class="input-section">
-  <div class="input-container">
-    <textarea
-      bind:value
-      placeholder="Type your message here..."
-      {disabled}
-      rows={3}
-      on:input={handleInput}
-      on:keydown={handleKeydown}
-      class="textarea"
-    ></textarea>
+<form class="input-section" on:submit={handleSubmit}>
+  <textarea
+    bind:value
+    placeholder="Type your message here"
+    {disabled}
+    rows={3}
+    on:input={handleInput}
+    on:keydown={handleKeydown}
+    class="textarea"
+  ></textarea>
+
+  <div class="controls">
+    <VoiceRecorder />
+
     <button
-      on:click={handleSubmit}
+      type="submit"
       disabled={disabled || !value.trim()}
-      class="submit-button"
+      class="submit"
     >
       Send
     </button>
   </div>
-</div>
+</form>
 
 <style>
   .input-section {
-    width: 100%;
-    margin: 20px 0;
-  }
+    --border-color: var(--neutral-mid);
 
-  .input-container {
     display: flex;
-    gap: 8px;
     flex-direction: column;
+    gap: 8px;
+    padding: 16px;
+
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
   }
 
   .textarea {
-    flex: 1;
-    min-height: 60px;
-    padding: 12px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-family: inherit;
-    font-size: 14px;
-    line-height: 1.4;
-    resize: vertical;
-    box-sizing: border-box;
-    transition: border-color 0.2s ease;
-  }
+    height: 60px;
 
-  .textarea:focus {
-    outline: none;
-    border-color: #007bff;
-    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
-  }
-
-  .textarea:disabled {
-    background-color: #f5f5f5;
-    cursor: not-allowed;
-    opacity: 0.6;
-  }
-
-  .textarea::placeholder {
-    color: #999;
-  }
-
-  .submit-button {
-    padding: 12px 20px;
-    background-color: #007bff;
-    color: white;
     border: none;
-    border-radius: 4px;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: background-color 0.2s ease;
-    white-space: nowrap;
-    height: fit-content;
-    width: fit-content;
-  }
+    background-color: transparent;
 
-  .submit-button:hover:not(:disabled) {
-    background-color: #0056b3;
-  }
+    font-family: inherit;
+    font-size: inherit;
+    line-height: inherit;
+    color: inherit;
 
-  .submit-button:disabled {
-    background-color: #6c757d;
-    cursor: not-allowed;
-    opacity: 0.6;
-  }
-
-  .submit-button:focus {
     outline: none;
-    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+    resize: none;
+  }
+
+  .controls {
+    display: flex;
+    gap: 8px;
+    align-self: end;
   }
 </style>
