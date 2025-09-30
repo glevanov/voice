@@ -5,18 +5,18 @@
   --red-200: oklch(0.72 0.19 20);
   --red-300: oklch(0.66 0.18 20);
   --red-400: oklch(0.51 0.13 20);
-  --mustard-100: oklch(0.82 0.11 60);
-  --mustard-200: oklch(0.71 0.19 60);
-  --mustard-300: oklch(0.66 0.18 60);
-  --mustard-400: oklch(0.51 0.13 60);
-  --turquoise-100: oklch(0.81 0.11 140);
-  --turquoise-200: oklch(0.69 0.19 140);
-  --turquoise-300: oklch(0.63 0.18 140);
-  --turquoise-400: oklch(0.48 0.13 140);
-  --azure-100: oklch(0.83 0.11 300);
-  --azure-200: oklch(0.72 0.19 300);
-  --azure-300: oklch(0.66 0.18 300);
-  --azure-400: oklch(0.51 0.13 300);
+  --orange-100: oklch(0.82 0.11 60);
+  --orange-200: oklch(0.71 0.19 60);
+  --orange-300: oklch(0.66 0.18 60);
+  --orange-400: oklch(0.51 0.13 60);
+  --green-100: oklch(0.81 0.11 140);
+  --green-200: oklch(0.69 0.19 140);
+  --green-300: oklch(0.63 0.18 140);
+  --green-400: oklch(0.48 0.13 140);
+  --purple-100: oklch(0.83 0.11 300);
+  --purple-200: oklch(0.72 0.19 300);
+  --purple-300: oklch(0.66 0.18 300);
+  --purple-400: oklch(0.51 0.13 300);
 
   --neutral-light: #ffffff;
   --neutral-dark: #2c2a30;
@@ -26,6 +26,10 @@
   --main-bg-color: var(--neutral-mid);
   --default-text-color: var(--neutral-darkest);
   --inverse-text-color: var(--neutral-light);
+
+  --status-danger: var(--red-300);
+  --status-warning: var(--orange-300);
+  --status-success: var(--green-300);
   
   --card-bg-color: var(--neutral-light);
 
@@ -33,6 +37,10 @@
     --main-bg-color: var(--neutral-darkest);
     --default-text-color: var(--neutral-light);
     --inverse-text-color: var(--neutral-darkest);
+
+    --status-danger: var(--red-200);
+    --status-warning: var(--orange-200);
+    --status-success: var(--green-200);
     
     --card-bg-color: var(--neutral-dark);
   }
