@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onDestroy } from "svelte";
+
   import "./app.css";
   import { addUserMessage, addAssistantMessage } from "./store/messages.js";
   import { websocketStore } from "./store/websocket";
@@ -8,7 +9,7 @@
   import InputSection from "./components/input-section/input-section.svelte";
   import VoiceRecorder from "./components/voice-recorder/voice-recorder.svelte";
   import AudioElement from "./components/audio-element/audio-element.svelte";
-  import StatusIndicator from "./components/status-indicator/status-indicator.svelte";
+  import ChatHeader from "./components/chat-header/chat-header.svelte";
 
   let audio: string | null = null;
   let audioElement: HTMLAudioElement | null = null;
@@ -46,7 +47,7 @@
 
 <div class="app">
   <div class="chat">
-    <StatusIndicator />
+    <ChatHeader />
 
     <ChatHistory />
 
@@ -73,10 +74,11 @@
     flex-grow: 1;
     display: flex;
     flex-direction: column;
+    gap: 20px;
     width: 100%;
     max-width: 1200px;
     padding: 32px;
-    
+
     background: var(--card-bg-color);
     border-radius: 36px;
   }

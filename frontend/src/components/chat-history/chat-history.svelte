@@ -1,88 +1,67 @@
 <script lang="ts">
-  import { messages, clearMessages } from "../../store/messages";
+  import { messages } from "../../store/messages";
 </script>
 
 <div class="chat-history">
-  <div class="chat-header">
-    <h2>Chat History</h2>
-    <button on:click={clearMessages} class="clear-btn">Clear History</button>
-  </div>
-  <div class="messages">
-    {#each $messages as message}
-      <div class="message {message.role}">
-        <div class="role">
-          {message.role === "user" ? "You" : "Assistant"}:
-        </div>
-        <div class="content">{message.content}</div>
-      </div>
-    {/each}
-    {#if $messages.length === 0}
-      <div class="no-messages">No messages yet...</div>
-    {/if}
-  </div>
+  {#each $messages as message}
+    <div class="message content {message.role}">
+      {message.content}
+    </div>
+  {/each}
+  {#if $messages.length === 0}
+    <div class="no-messages">What would you like to talk about today?</div>
+  {/if}
 </div>
 
 <style>
+  :root {
+    --user-card-color: var(--purple-300);
+    --user-text-color: var(--neutral-light);
+    --assistant-card-color: var(--neutral-mid);
+    --assistant-text-color: var(--neutral-darkest);
+
+    @media (prefers-color-scheme: dark) {
+      --user-card-user-color: var(--purple-200);
+      --assistant-card-color: var(--neutral-darkest);
+      --assistant-text-color: var(--neutral-light);
+    }
+  }
+
   .chat-history {
-    margin: 20px 0;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    max-height: 400px;
-    overflow-y: auto;
-  }
-
-  .chat-header {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 15px;
-    border-bottom: 1px solid #eee;
-    background-color: #f8f9fa;
-  }
-
-  .chat-header h2 {
-    margin: 0;
-    font-size: 1.2em;
-  }
-
-  .clear-btn {
-    padding: 5px 10px;
-    background-color: #dc3545;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 0.9em;
-  }
-
-  .clear-btn:hover {
-    background-color: #c82333;
-  }
-
-  .messages {
-    padding: 15px;
+    flex-direction: column;
+    gap: 20px;
+    margin: -10px;
+    padding: 10px;
+    overflow-y: auto;
+    height: calc(100svh - 450px);
   }
 
   .message {
-    margin-bottom: 15px;
-    padding: 10px;
-    border-radius: 8px;
+    max-width: fit-content;
+    padding: 12px 18px;
+
+    border-radius: 20px;
   }
 
-  .message.user {
-    background-color: #e3f2fd;
-    margin-left: 20px;
+  .user {
+    align-self: end;
+    margin-left: 60px;
+
+    background-color: var(--user-card-color);
+    border-bottom-right-radius: 2px;
+
+    color: var(--neutral-light);
   }
 
-  .message.assistant {
-    background-color: #f1f8e9;
-    margin-right: 20px;
-  }
+  .assistant {
+    align-self: start;
+    margin-right: 60px;
 
-  .role {
-    font-weight: bold;
-    margin-bottom: 5px;
-    color: #555;
+    background-color: var(--assistant-card-color);
+    border-bottom-left-radius: 2px;
+
+    color: var(--default-text-color);
   }
 
   .content {
@@ -90,9 +69,9 @@
   }
 
   .no-messages {
-    text-align: center;
-    color: #666;
-    font-style: italic;
-    padding: 20px;
+    display: flex;
+    flex-grow: 1;
+    justify-content: center;
+    align-items: center;
   }
 </style>
