@@ -1,18 +1,14 @@
 <script lang="ts">
   import { connectionStatus } from "../../store/websocket";
-
-  const danger = ["Disconnected", "Error"].includes($connectionStatus);
-  const warning = ["Connecting", "Reconnecting"].includes($connectionStatus);
-  const success = $connectionStatus === "Connected";
 </script>
 
 <div class="status">
   <span
     class="dot pulse"
-    class:danger
-    class:warning
-    class:success
-    class:pulse={warning}
+    class:danger={["Disconnected", "Error"].includes($connectionStatus)}
+    class:warning={["Connecting", "Reconnecting"].includes($connectionStatus)}
+    class:success={$connectionStatus === "Connected"}
+    class:pulse={["Connecting", "Reconnecting"].includes($connectionStatus)}
   />
   {$connectionStatus}
 </div>
