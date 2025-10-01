@@ -3,6 +3,7 @@
 
   import { websocketStore } from "../../store/websocket";
   import { messages } from "../../store/messages";
+  import Button from "../button/button.svelte";
   import RecordIcon from "./record-icon.svelte";
   import StopIcon from "./stop-icon.svelte";
 
@@ -62,9 +63,9 @@
   });
 </script>
 
-<button
+<Button
+  isRound
   on:click={handleClick}
-  class="round-button"
   aria-label={isRecording ? "Sluta spela in." : "Starta inspelning."}
 >
   {#if isRecording}
@@ -74,42 +75,9 @@
   {:else}
     <RecordIcon />
   {/if}
-</button>
+</Button>
 
 <style>
-  :root {
-    --bg-color: var(--purple-300);
-    @media (prefers-color-scheme: dark) {
-      --bg-color: var(--purple-200);
-    }
-  }
-
-  .round-button {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 50px;
-    height: 50px;
-    box-sizing: border-box;
-
-    background-color: var(--bg-color);
-    border: none;
-    border-radius: 50%;
-
-    color: var(--neutral-light);
-
-    transition: background-color 0.2s ease-in;
-    cursor: pointer;
-  }
-
-  .round-button:hover,
-  .round-button:focus-visible {
-    --bg-color: var(--purple-400);
-    @media (prefers-color-scheme: dark) {
-      --bg-color: var(--purple-100);
-    }
-  }
-
   .pulse {
     width: 24px;
     height: 24px;

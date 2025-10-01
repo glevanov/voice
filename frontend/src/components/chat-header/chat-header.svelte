@@ -1,11 +1,15 @@
 <script lang="ts">
   import StatusIndicator from "../status-indicator/status-indicator.svelte";
-  import ClearChat from "../clear-chat/clear-chat.svelte";
+  import Button from "../button/button.svelte";
+  import { clearMessages } from "../../store/messages.js";
 </script>
 
 <div class="chat-header">
   <StatusIndicator />
-  <ClearChat />
+
+  <Button on:click={clearMessages} fill="outlined" color="danger"
+    >Rensa chatt</Button
+  >
 </div>
 
 <style>
