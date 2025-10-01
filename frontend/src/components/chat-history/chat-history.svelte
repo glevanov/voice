@@ -9,7 +9,7 @@
     </div>
   {/each}
   {#if $messages.length === 0}
-    <div class="no-messages">What would you like to talk about today?</div>
+    <div class="no-messages">Vad vill du prata om idag?</div>
   {/if}
 </div>
 

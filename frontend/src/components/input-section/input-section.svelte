@@ -24,7 +24,7 @@
   }
 
   function handleSubmit(event: SubmitEvent) {
-    event.preventDefault()
+    event.preventDefault();
     if (value.trim()) {
       handleMessageSend(value);
     }
@@ -38,7 +38,7 @@
 
     const sent = websocketStore.sendMessages(payload);
     if (!sent) {
-      alert("WebSocket connection is not open");
+      alert("WebSocket‑anslutningen är inte öppen.");
     }
     value = "";
   }
@@ -47,7 +47,7 @@
 <form class="input-section" on:submit={handleSubmit}>
   <textarea
     bind:value
-    placeholder="Type your message here"
+    placeholder="Skriv ditt meddelande här."
     {disabled}
     rows={3}
     on:input={handleInput}
@@ -58,12 +58,8 @@
   <div class="controls">
     <VoiceRecorder />
 
-    <button
-      type="submit"
-      disabled={disabled || !value.trim()}
-      class="submit"
-    >
-      Send
+    <button type="submit" disabled={disabled || !value.trim()} class="submit">
+      Skicka
     </button>
   </div>
 </form>

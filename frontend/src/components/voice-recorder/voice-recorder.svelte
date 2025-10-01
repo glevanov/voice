@@ -37,7 +37,7 @@
     } catch (error) {
       console.error("Error accessing microphone:", error);
       alert(
-        "Could not access microphone. Please ensure you've granted the necessary permissions.",
+        "Kunde inte komma åt mikrofonen. Se till att du har gett nödvändiga behörigheter.",
       );
     }
   }
@@ -65,7 +65,7 @@
 <button
   on:click={handleClick}
   class="round-button"
-  aria-label={isRecording ? "Stop recording" : "Start recording"}
+  aria-label={isRecording ? "Sluta spela in." : "Starta inspelning."}
 >
   {#if isRecording}
     <div class="pulse">

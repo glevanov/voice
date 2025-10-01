@@ -1,4 +1,4 @@
-import { writable, derived } from "svelte/store";
+import { writable } from "svelte/store";
 import type { Message } from "./messages";
 
 export type Status =
@@ -8,10 +8,6 @@ export type Status =
   | "Reconnecting"
   | "Error";
 export const connectionStatus = writable<Status>("Connecting");
-export const isConnected = derived(
-  connectionStatus,
-  ($status) => $status === "Connected",
-);
 
 let ws: WebSocket | null = null;
 let reconnectTimeout: number | null = null;

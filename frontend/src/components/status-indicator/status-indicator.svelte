@@ -1,5 +1,13 @@
 <script lang="ts">
-  import { connectionStatus } from "../../store/websocket";
+  import { connectionStatus, type Status } from "../../store/websocket";
+
+  const connectionStatusMap: Record<Status, string> = {
+    ["Connecting"]: "Ansluter",
+    ["Connected"]: "Ansluten",
+    ["Disconnected"]: "Frånkopplad",
+    ["Reconnecting"]: "Återansluter",
+    ["Error"]: "Fel",
+  } as const;
 </script>
 
 <div class="status">
@@ -10,7 +18,7 @@
     class:success={$connectionStatus === "Connected"}
     class:pulse={["Connecting", "Reconnecting"].includes($connectionStatus)}
   />
-  {$connectionStatus}
+  {connectionStatusMap[$connectionStatus]}
 </div>
 
 <style>

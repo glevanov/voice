@@ -3,7 +3,7 @@
 </script>
 
 <button on:click={clearMessages} class="button danger-outline">
-  Clear chat
+  Rensa chatt
 </button>
 
 <style>
