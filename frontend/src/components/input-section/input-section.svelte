@@ -4,6 +4,7 @@
   import { messages, addUserMessage } from "../../store/messages";
   import { websocketStore, connectionStatus } from "../../store/websocket";
   import VoiceRecorder from "../voice-recorder/voice-recorder.svelte";
+  import SubmitIcon from "./submit-icon.svelte";
 
   let value: string = "";
 
@@ -58,8 +59,12 @@
   <div class="controls">
     <VoiceRecorder />
 
-    <button type="submit" disabled={disabled || !value.trim()} class="submit">
-      Skicka
+    <button
+      type="submit"
+      disabled={disabled || !value.trim()}
+      class="round-outline-button"
+    >
+      <SubmitIcon />
     </button>
   </div>
 </form>
@@ -96,5 +101,40 @@
     display: flex;
     gap: 8px;
     align-self: end;
+  }
+
+  :root {
+    --color: var(--purple-300);
+    @media (prefers-color-scheme: dark) {
+      --color: var(--purple-200);
+    }
+  }
+
+  .round-outline-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 50px;
+    height: 50px;
+    box-sizing: border-box;
+
+    background-color: transparent;
+    border: 1px solid var(--color);
+    border-radius: 50%;
+
+    color: var(--color);
+
+    transition:
+      border-color 0.2s ease-in,
+      color 0.2s ease-in;
+    cursor: pointer;
+  }
+
+  .round-outline-button:hover,
+  .round-outline-button:focus-visible {
+    --color: var(--purple-400);
+    @media (prefers-color-scheme: dark) {
+      --color: var(--purple-100);
+    }
   }
 </style>
