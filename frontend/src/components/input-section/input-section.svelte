@@ -49,7 +49,8 @@
 <form class="input-section" on:submit={handleSubmit}>
   <textarea
     bind:value
-    placeholder="Skriv ditt meddelande här."
+    aria-label="Skriv ditt meddelande här."
+    placeholder={disabled ? "Ej ansluten" : "Skriv ditt meddelande här."}
     {disabled}
     rows={3}
     on:input={handleInput}
