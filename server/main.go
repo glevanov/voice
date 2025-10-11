@@ -5,7 +5,6 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"io"
 	"log"
 	"net/http"
 	"os"
@@ -17,59 +16,13 @@ import (
 	"github.com/gorilla/websocket"
 	"voice-server/config"
 	"voice-server/models"
+	"voice-server/services"
 )
 
 var upgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool {
 		return true // Allow connections from any origin
 	},
-}
-
-func callLLMAPI(messages []models.Message) (string, error) {
-	fullMessages := []models.Message{
-		{
-			Role:    "developer",
-			Content: config.SystemPrompt,
-		},
-	}
-	fullMessages = append(fullMessages, messages...)
-
-	chatRequest := models.ChatRequest{
-		Model:    config.LLMModel,
-		Messages: fullMessages,
-	}
-
-	jsonData, err := json.Marshal(chatRequest)
-	if err != nil {
-		return "", fmt.Errorf("error marshaling request: %v", err)
-	}
-
-	log.Printf("Sending API request: %s", string(jsonData))
-
-	resp, err := http.Post(config.LLMAPIUrl, "application/json", bytes.NewBuffer(jsonData))
-	if err != nil {
-		return "", fmt.Errorf("error making API request: %v", err)
-	}
-	defer resp.Body.Close()
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return "", fmt.Errorf("error reading response body: %v", err)
-	}
-
-	log.Printf("Received API response: %s", string(body))
-
-	var chatResponse models.ChatResponse
-	err = json.Unmarshal(body, &chatResponse)
-	if err != nil {
-		return "", fmt.Errorf("error unmarshaling response: %v", err)
-	}
-
-	if len(chatResponse.Choices) == 0 {
-		return "", fmt.Errorf("no choices in response")
-	}
-
-	return chatResponse.Choices[0].Message.Content, nil
 }
 
 func saveAudioBlob(audioData string) error {
@@ -205,7 +158,7 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 			}
 			fullMessages := append(audioMsg.Messages, userMessage)
 
-			llmOutput, err := callLLMAPI(fullMessages)
+			llmOutput, err := services.CallLLMAPI(fullMessages)
 			if err != nil {
 				log.Printf("LLM error: %v", err)
 				errorMsg := fmt.Sprintf("Error processing with LLM: %v", err)
@@ -256,7 +209,7 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 
-		llmOutput, err := callLLMAPI(wsMessage.Messages)
+		llmOutput, err := services.CallLLMAPI(wsMessage.Messages)
 		if err != nil {
 			log.Printf("LLM error: %v", err)
 			conn.WriteMessage(websocket.TextMessage, []byte("Error processing your request."))
