@@ -58,7 +58,7 @@
   ></textarea>
 
   <div class="controls">
-    <VoiceRecorder />
+    <VoiceRecorder {disabled} />
 
     <Button
       type="submit"
@@ -70,6 +70,14 @@
 </form>
 
 <style>
+  :root {
+    --primary: var(--purple-300);
+
+    @media (prefers-color-scheme: dark) {
+      --primary: var(--purple-200);
+    }
+  }
+
   .input-section {
     --border-color: var(--neutral-mid);
 
@@ -80,6 +88,17 @@
 
     border-radius: 12px;
     border: 1px solid var(--border-color);
+
+    outline: 3px solid transparent;
+    outline-offset: 2px;
+    transition: outline-color 0.2s ease;
+
+    &:has(.textarea:focus) {
+      border-color: var(--primary);
+    }
+    &:has(.textarea:focus-visible) {
+      outline-color: var(--outline-color);
+    }
   }
 
   .textarea {

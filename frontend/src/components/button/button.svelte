@@ -29,6 +29,7 @@
     --primary-hover: var(--purple-400);
     --danger: var(--red-300);
     --danger-hover: var(--red-400);
+    --disabled: var(--neutral-mid);
 
     @media (prefers-color-scheme: dark) {
       --primary: var(--purple-200);
@@ -43,16 +44,15 @@
     line-height: inherit;
 
     cursor: pointer;
-    outline: none;
-
-    &:focus-visible:not(.disabled) {
-      outline: 3px solid var(--outline-color);
-      outline-offset: 2px;
-      transition: outline-color 0.2s ease;
+    outline: 3px solid transparent;
+    outline-offset: 2px;
+    transition: outline-color 0.2s ease;
+    &:focus-visible:not(:disabled) {
+      outline-color: var(--outline-color);
     }
   }
 
-  .disabled {
+  :disabled {
     cursor: not-allowed;
   }
 
@@ -80,7 +80,7 @@
 
     transition: background-color 0.2s ease;
 
-    &.color-primary {
+    &.color-primary:not(:disabled) {
       background-color: var(--primary);
 
       &:hover {
@@ -88,12 +88,16 @@
       }
     }
 
-    &.color-danger {
+    &.color-danger:not(:disabled) {
       background-color: var(--danger);
 
       &:hover {
         background-color: var(--danger-hover);
       }
+    }
+
+    &:disabled {
+      background-color: var(--disabled);
     }
   }
 
@@ -106,7 +110,7 @@
       border-color 0.2s ease,
       color 0.2s ease;
 
-    &.color-primary {
+    &.color-primary:not(:disabled) {
       color: var(--primary);
       border-color: var(--primary);
 
@@ -116,7 +120,7 @@
       }
     }
 
-    &.color-danger {
+    &.color-danger:not(:disabled) {
       color: var(--danger);
       border-color: var(--danger);
 
@@ -124,6 +128,11 @@
         color: var(--danger-hover);
         border-color: var(--danger-hover);
       }
+    }
+
+    &:disabled {
+      color: var(--disabled);
+      border-color: var(--disabled);
     }
   }
 </style>
