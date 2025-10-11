@@ -16,6 +16,7 @@ import (
 
 	"github.com/gorilla/websocket"
 	"voice-server/config"
+	"voice-server/models"
 )
 
 var upgrader = websocket.Upgrader{
@@ -24,47 +25,8 @@ var upgrader = websocket.Upgrader{
 	},
 }
 
-type Message struct {
-	Role    string `json:"role"`
-	Content string `json:"content"`
-}
-
-type ChatRequest struct {
-	Model    string    `json:"model"`
-	Messages []Message `json:"messages"`
-}
-
-type ChatChoice struct {
-	Index   int     `json:"index"`
-	Message Message `json:"message"`
-}
-
-type ChatResponse struct {
-	Choices []ChatChoice `json:"choices"`
-}
-
-type Response struct {
-	Type string `json:"type"`
-	Text string `json:"text"`
-}
-
-type WebSocketMessage struct {
-	Messages []Message `json:"messages"`
-}
-
-type AudioMessage struct {
-	Type      string    `json:"type"`
-	AudioData string    `json:"audioData"`
-	Messages  []Message `json:"messages"`
-}
-
-type TranscriptionResponse struct {
-	Type string `json:"type"`
-	Text string `json:"text"`
-}
-
-func callLLMAPI(messages []Message) (string, error) {
-	fullMessages := []Message{
+func callLLMAPI(messages []models.Message) (string, error) {
+	fullMessages := []models.Message{
 		{
 			Role:    "developer",
 			Content: config.SystemPrompt,
@@ -72,7 +34,7 @@ func callLLMAPI(messages []Message) (string, error) {
 	}
 	fullMessages = append(fullMessages, messages...)
 
-	chatRequest := ChatRequest{
+	chatRequest := models.ChatRequest{
 		Model:    config.LLMModel,
 		Messages: fullMessages,
 	}
@@ -97,7 +59,7 @@ func callLLMAPI(messages []Message) (string, error) {
 
 	log.Printf("Received API response: %s", string(body))
 
-	var chatResponse ChatResponse
+	var chatResponse models.ChatResponse
 	err = json.Unmarshal(body, &chatResponse)
 	if err != nil {
 		return "", fmt.Errorf("error unmarshaling response: %v", err)
@@ -199,7 +161,7 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Check if this is an audio message with chat history
-		var audioMsg AudioMessage
+		var audioMsg models.AudioMessage
 		if err := json.Unmarshal(message, &audioMsg); err == nil && audioMsg.Type == "audio" {
 			log.Printf("Received audio message with %d bytes of audio data", len(audioMsg.AudioData))
 
@@ -221,7 +183,7 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 				continue
 			}
 
-			transcriptionResponse := TranscriptionResponse{
+			transcriptionResponse := models.TranscriptionResponse{
 				Type: "user",
 				Text: transcribedText,
 			}
@@ -237,7 +199,7 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 				break
 			}
 
-			userMessage := Message{
+			userMessage := models.Message{
 				Role:    "user",
 				Content: transcribedText,
 			}
@@ -264,7 +226,7 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 				continue
 			}
 
-			assistantResponse := Response{
+			assistantResponse := models.Response{
 				Type: "assistant",
 				Text: llmOutput,
 			}
@@ -286,7 +248,7 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 		log.Printf("Received: %s", message)
 
 		// Parse the incoming message containing chat history
-		var wsMessage WebSocketMessage
+		var wsMessage models.WebSocketMessage
 		err = json.Unmarshal(message, &wsMessage)
 		if err != nil {
 			log.Printf("Error parsing text message: %v", err)
@@ -313,7 +275,7 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 
-		response := Response{
+		response := models.Response{
 			Type: "assistant",
 			Text: llmOutput,
 		}
