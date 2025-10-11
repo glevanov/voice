@@ -44,6 +44,12 @@
 
     cursor: pointer;
     outline: none;
+
+    &:focus-visible:not(.disabled) {
+      outline: 3px solid var(--outline-color);
+      outline-offset: 2px;
+      transition: outline-color 0.2s ease;
+    }
   }
 
   .disabled {
@@ -73,20 +79,22 @@
     color: var(--neutral-light);
 
     transition: background-color 0.2s ease;
-  }
 
-  .fill-filled.color-primary {
-    background-color: var(--primary);
-  }
-  .fill-filled.color-primary:hover {
-    background-color: var(--primary-hover);
-  }
+    &.color-primary {
+      background-color: var(--primary);
 
-  .fill-filled.color-danger {
-    background-color: var(--danger);
-  }
-  .fill-filled.color-danger:hover {
-    background-color: var(--danger-hover);
+      &:hover {
+        background-color: var(--primary-hover);
+      }
+    }
+
+    &.color-danger {
+      background-color: var(--danger);
+
+      &:hover {
+        background-color: var(--danger-hover);
+      }
+    }
   }
 
   .fill-outlined {
@@ -97,29 +105,25 @@
     transition:
       border-color 0.2s ease,
       color 0.2s ease;
-  }
 
-  .fill-outlined.color-primary {
-    color: var(--primary);
-    border-color: var(--primary);
-  }
-  .fill-outlined.color-primary:hover {
-    color: var(--primary);
-    border-color: var(--primary);
-  }
+    &.color-primary {
+      color: var(--primary);
+      border-color: var(--primary);
 
-  .fill-outlined.color-danger {
-    color: var(--danger);
-    border-color: var(--danger);
-  }
-  .fill-outlined.color-danger:hover {
-    color: var(--danger-hover);
-    border-color: var(--danger-hover);
-  }
+      &:hover {
+        color: var(--primary);
+        border-color: var(--primary);
+      }
+    }
 
-  .base:focus-visible:not(.disabled) {
-    outline: 3px solid var(--outline-color);
-    outline-offset: 2px;
-    transition: outline-color 0.2s ease;
+    &.color-danger {
+      color: var(--danger);
+      border-color: var(--danger);
+
+      &:hover {
+        color: var(--danger-hover);
+        border-color: var(--danger-hover);
+      }
+    }
   }
 </style>
