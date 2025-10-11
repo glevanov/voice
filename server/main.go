@@ -15,13 +15,7 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
-)
-
-const (
-	LLM_MODEL   = "google/gemma-3n-e4b"
-	LLM_API_URL = "http://localhost:1234/v1/chat/completions"
-	PIPER_MODEL = "sv_SE-nst-medium.onnx"
-	PORT        = ":3002"
+	"voice-server/config"
 )
 
 var upgrader = websocket.Upgrader{
@@ -73,13 +67,13 @@ func callLLMAPI(messages []Message) (string, error) {
 	fullMessages := []Message{
 		{
 			Role:    "developer",
-			Content: "You are a helpful and friendly conversation partner. Always answer in Swedish, as if you were talking to a friend. Answer as if you are speaking, avoiding using emojis, special characters, formatting or comments in your responses. Focus on natural language and a personal tone.",
+			Content: config.SystemPrompt,
 		},
 	}
 	fullMessages = append(fullMessages, messages...)
 
 	chatRequest := ChatRequest{
-		Model:    LLM_MODEL,
+		Model:    config.LLMModel,
 		Messages: fullMessages,
 	}
 
@@ -90,7 +84,7 @@ func callLLMAPI(messages []Message) (string, error) {
 
 	log.Printf("Sending API request: %s", string(jsonData))
 
-	resp, err := http.Post(LLM_API_URL, "application/json", bytes.NewBuffer(jsonData))
+	resp, err := http.Post(config.LLMAPIUrl, "application/json", bytes.NewBuffer(jsonData))
 	if err != nil {
 		return "", fmt.Errorf("error making API request: %v", err)
 	}
@@ -123,7 +117,7 @@ func saveAudioBlob(audioData string) error {
 	}
 	log.Printf("Processing audio blob of %d bytes", len(data))
 
-	tempFile := filepath.Join("../audio", fmt.Sprintf("temp_%d.webm", time.Now().UnixNano()))
+	tempFile := filepath.Join(config.AudioDir, fmt.Sprintf("temp_%d.webm", time.Now().UnixNano()))
 	log.Printf("Creating temporary file: %s", tempFile)
 
 	err = os.WriteFile(tempFile, data, 0644)
@@ -136,7 +130,7 @@ func saveAudioBlob(audioData string) error {
 		}
 	}()
 
-	outputFile := "../audio/question.wav"
+	outputFile := filepath.Join(config.AudioDir, config.QuestionAudioFile)
 	log.Printf("Converting %s to %s using ffmpeg", tempFile, outputFile)
 
 	cmd := exec.Command("ffmpeg", "-y", "-i", tempFile, "-ar", "22050", "-ac", "1", "-sample_fmt", "s16", outputFile)
@@ -163,11 +157,11 @@ func saveAudioBlob(audioData string) error {
 func transcribeAudio(audioPath string) (string, error) {
 	log.Printf("Transcribing audio file: %s", audioPath)
 
-	cmd := exec.Command("../../whisper.cpp/build/bin/whisper-cli",
+	cmd := exec.Command(config.WhisperBinPath,
 		"--no-prints",
 		"--no-timestamps",
-		"--language", "auto",
-		"--model", "../../whisper.cpp/models/ggml-base.bin",
+		"--language", config.WhisperLanguage,
+		"--model", config.WhisperModel,
 		"--file", audioPath)
 
 	var stdout, stderr bytes.Buffer
@@ -219,7 +213,7 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 
 			log.Printf("Audio successfully processed and saved to question.wav")
 
-			transcribedText, err := transcribeAudio("../audio/question.wav")
+			transcribedText, err := transcribeAudio(filepath.Join(config.AudioDir, config.QuestionAudioFile))
 			if err != nil {
 				log.Printf("Error transcribing audio: %v", err)
 				errorMsg := fmt.Sprintf("Error transcribing audio: %v", err)
@@ -259,7 +253,8 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 
 			log.Printf("LLM: %s", llmOutput)
 
-			piperCmd := fmt.Sprintf(`echo "%s" | ../piper/piper --model ../piper/%s --output_file ../audio/answer.wav`, llmOutput, PIPER_MODEL)
+			piperCmd := fmt.Sprintf(`echo "%s" | %s/piper --model %s/%s --output_file %s/%s`,
+				llmOutput, config.PiperDir, config.PiperDir, config.PiperModel, config.AudioDir, config.AnswerAudioFile)
 			ttsCmd := exec.Command("bash", "-c", piperCmd)
 			err = ttsCmd.Run()
 			if err != nil {
@@ -308,7 +303,8 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 
 		log.Printf("LLM: %s", llmOutput)
 
-		piperCmd := fmt.Sprintf(`echo "%s" | ../piper/piper --model ../piper/%s --output_file ../audio/answer.wav`, llmOutput, PIPER_MODEL)
+		piperCmd := fmt.Sprintf(`echo "%s" | %s/piper --model %s/%s --output_file %s/%s`,
+			llmOutput, config.PiperDir, config.PiperDir, config.PiperModel, config.AudioDir, config.AnswerAudioFile)
 		ttsCmd := exec.Command("bash", "-c", piperCmd)
 		err = ttsCmd.Run()
 		if err != nil {
@@ -351,7 +347,7 @@ func serveAudio(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	audioPath := filepath.Join("../audio", filename)
+	audioPath := filepath.Join(config.AudioDir, filename)
 
 	if _, err := os.Stat(audioPath); os.IsNotExist(err) {
 		http.Error(w, "Audio file not found", http.StatusNotFound)
@@ -367,6 +363,6 @@ func main() {
 	http.HandleFunc("/ws", handleWebSocket)
 	http.HandleFunc("/", serveAudio)
 
-	log.Printf("WebSocket server starting on port %s", PORT)
-	log.Fatal(http.ListenAndServe(PORT, nil))
+	log.Printf("WebSocket server starting on port %s", config.Port)
+	log.Fatal(http.ListenAndServe(config.Port, nil))
 }
