@@ -43,6 +43,7 @@
     line-height: inherit;
 
     cursor: pointer;
+    outline: none;
   }
 
   .disabled {
@@ -71,7 +72,7 @@
 
     color: var(--neutral-light);
 
-    transition: background-color 0.2s ease-in;
+    transition: background-color 0.2s ease;
   }
 
   .fill-filled.color-primary {
@@ -94,8 +95,8 @@
     border-width: 1px;
 
     transition:
-      border-color 0.2s ease-in,
-      color 0.2s ease-in;
+      border-color 0.2s ease,
+      color 0.2s ease;
   }
 
   .fill-outlined.color-primary {
@@ -114,5 +115,11 @@
   .fill-outlined.color-danger:hover {
     color: var(--danger-hover);
     border-color: var(--danger-hover);
+  }
+
+  .base:focus-visible:not(.disabled) {
+    outline: 3px solid var(--outline-color);
+    outline-offset: 2px;
+    transition: outline-color 0.2s ease;
   }
 </style>
