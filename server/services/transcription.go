@@ -10,7 +10,6 @@ import (
 	"voice-server/config"
 )
 
-// TranscribeAudio transcribes an audio file using Whisper CLI
 func TranscribeAudio(audioPath string) (string, error) {
 	log.Printf("Transcribing audio file: %s", audioPath)
 

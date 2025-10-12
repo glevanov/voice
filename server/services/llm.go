@@ -12,7 +12,6 @@ import (
 	"voice-server/models"
 )
 
-// CallLLMAPI sends messages to the LLM API and returns the response
 func CallLLMAPI(messages []models.Message) (string, error) {
 	conversationMessages := []models.Message{
 		{

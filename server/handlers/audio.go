@@ -18,7 +18,6 @@ func ServeAudio(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Extract filename from URL path
 	filename := strings.TrimPrefix(r.URL.Path, "/")
 	if filename == "" {
 		http.Error(w, "No filename provided", http.StatusBadRequest)

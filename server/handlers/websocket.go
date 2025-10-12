@@ -36,7 +36,6 @@ func HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 
-		// Check if this is an audio message with chat history
 		var audioMsg models.AudioMessage
 		if err := json.Unmarshal(rawMessage, &audioMsg); err == nil && audioMsg.Type == "audio" {
 			handleAudioMessage(conn, audioMsg)
@@ -45,7 +44,6 @@ func HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 
 		log.Printf("Received: %s", rawMessage)
 
-		// Parse the incoming message containing chat history
 		var textMessage models.WebSocketMessage
 		err = json.Unmarshal(rawMessage, &textMessage)
 		if err != nil {

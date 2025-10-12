@@ -13,8 +13,6 @@ import (
 	"voice-server/config"
 )
 
-// SaveAudioBlob decodes base64 audio data, saves it as a temporary file,
-// and converts it to WAV format using ffmpeg
 func SaveAudioBlob(audioData string) error {
 	decodedAudio, err := base64.StdEncoding.DecodeString(audioData)
 	if err != nil {
