@@ -6,7 +6,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 
@@ -94,12 +93,9 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 
 			log.Printf("LLM: %s", llmOutput)
 
-			piperCmd := fmt.Sprintf(`echo "%s" | %s/piper --model %s/%s --output_file %s/%s`,
-				llmOutput, config.PiperDir, config.PiperDir, config.PiperModel, config.AudioDir, config.AnswerAudioFile)
-			ttsCmd := exec.Command("bash", "-c", piperCmd)
-			err = ttsCmd.Run()
+			err = services.GenerateSpeech(llmOutput, config.AnswerAudioFile)
 			if err != nil {
-				log.Printf("Piper error: %v", err)
+				log.Printf("Error generating speech: %v", err)
 				errorMsg := fmt.Sprintf("Error generating speech: %v", err)
 				conn.WriteMessage(websocket.TextMessage, []byte(errorMsg))
 				continue
@@ -144,12 +140,9 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 
 		log.Printf("LLM: %s", llmOutput)
 
-		piperCmd := fmt.Sprintf(`echo "%s" | %s/piper --model %s/%s --output_file %s/%s`,
-			llmOutput, config.PiperDir, config.PiperDir, config.PiperModel, config.AudioDir, config.AnswerAudioFile)
-		ttsCmd := exec.Command("bash", "-c", piperCmd)
-		err = ttsCmd.Run()
+		err = services.GenerateSpeech(llmOutput, config.AnswerAudioFile)
 		if err != nil {
-			log.Printf("Piper error: %v", err)
+			log.Printf("Error generating speech: %v", err)
 			conn.WriteMessage(websocket.TextMessage, []byte("Error generating speech."))
 			continue
 		}
