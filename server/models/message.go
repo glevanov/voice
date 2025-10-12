@@ -38,4 +38,3 @@ type TranscriptionResponse struct {
 	Type string `json:"type"`
 	Text string `json:"text"`
 }
-

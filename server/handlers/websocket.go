@@ -30,7 +30,7 @@ func HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 	log.Println("Client connected")
 
 	for {
-		_, message, err := conn.ReadMessage()
+		_, rawMessage, err := conn.ReadMessage()
 		if err != nil {
 			log.Printf("Error reading message: %v", err)
 			break
@@ -38,23 +38,23 @@ func HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 
 		// Check if this is an audio message with chat history
 		var audioMsg models.AudioMessage
-		if err := json.Unmarshal(message, &audioMsg); err == nil && audioMsg.Type == "audio" {
+		if err := json.Unmarshal(rawMessage, &audioMsg); err == nil && audioMsg.Type == "audio" {
 			handleAudioMessage(conn, audioMsg)
 			continue
 		}
 
-		log.Printf("Received: %s", message)
+		log.Printf("Received: %s", rawMessage)
 
 		// Parse the incoming message containing chat history
-		var wsMessage models.WebSocketMessage
-		err = json.Unmarshal(message, &wsMessage)
+		var textMessage models.WebSocketMessage
+		err = json.Unmarshal(rawMessage, &textMessage)
 		if err != nil {
 			log.Printf("Error parsing text message: %v", err)
 			conn.WriteMessage(websocket.TextMessage, []byte("Error parsing your request."))
 			continue
 		}
 
-		handleTextMessage(conn, wsMessage)
+		handleTextMessage(conn, textMessage)
 	}
 }
 
@@ -71,7 +71,7 @@ func handleAudioMessage(conn *websocket.Conn, audioMsg models.AudioMessage) {
 
 	log.Printf("Audio successfully processed and saved to question.wav")
 
-	transcribedText, err := services.TranscribeAudio(filepath.Join(config.AudioDir, config.QuestionAudioFile))
+	transcription, err := services.TranscribeAudio(filepath.Join(config.AudioDir, config.QuestionAudioFile))
 	if err != nil {
 		log.Printf("Error transcribing audio: %v", err)
 		errorMsg := fmt.Sprintf("Error transcribing audio: %v", err)
@@ -81,15 +81,15 @@ func handleAudioMessage(conn *websocket.Conn, audioMsg models.AudioMessage) {
 
 	transcriptionResponse := models.TranscriptionResponse{
 		Type: "user",
-		Text: transcribedText,
+		Text: transcription,
 	}
-	responseJSON, err := json.Marshal(transcriptionResponse)
+	transcriptionJSON, err := json.Marshal(transcriptionResponse)
 	if err != nil {
 		log.Printf("Error marshaling transcription response: %v", err)
 		return
 	}
 
-	err = conn.WriteMessage(websocket.TextMessage, responseJSON)
+	err = conn.WriteMessage(websocket.TextMessage, transcriptionJSON)
 	if err != nil {
 		log.Printf("Error sending transcription: %v", err)
 		return
@@ -97,11 +97,11 @@ func handleAudioMessage(conn *websocket.Conn, audioMsg models.AudioMessage) {
 
 	userMessage := models.Message{
 		Role:    "user",
-		Content: transcribedText,
+		Content: transcription,
 	}
-	fullMessages := append(audioMsg.Messages, userMessage)
+	conversationHistory := append(audioMsg.Messages, userMessage)
 
-	llmOutput, err := services.CallLLMAPI(fullMessages)
+	assistantMessage, err := services.CallLLMAPI(conversationHistory)
 	if err != nil {
 		log.Printf("LLM error: %v", err)
 		errorMsg := fmt.Sprintf("Error processing with LLM: %v", err)
@@ -109,9 +109,9 @@ func handleAudioMessage(conn *websocket.Conn, audioMsg models.AudioMessage) {
 		return
 	}
 
-	log.Printf("LLM: %s", llmOutput)
+	log.Printf("LLM: %s", assistantMessage)
 
-	err = services.GenerateSpeech(llmOutput, config.AnswerAudioFile)
+	err = services.GenerateSpeech(assistantMessage, config.AnswerAudioFile)
 	if err != nil {
 		log.Printf("Error generating speech: %v", err)
 		errorMsg := fmt.Sprintf("Error generating speech: %v", err)
@@ -121,32 +121,32 @@ func handleAudioMessage(conn *websocket.Conn, audioMsg models.AudioMessage) {
 
 	assistantResponse := models.Response{
 		Type: "assistant",
-		Text: llmOutput,
+		Text: assistantMessage,
 	}
-	assistantResponseJSON, err := json.Marshal(assistantResponse)
+	assistantJSON, err := json.Marshal(assistantResponse)
 	if err != nil {
 		log.Printf("Error marshaling assistant response: %v", err)
 		return
 	}
 
-	err = conn.WriteMessage(websocket.TextMessage, assistantResponseJSON)
+	err = conn.WriteMessage(websocket.TextMessage, assistantJSON)
 	if err != nil {
 		log.Printf("Error sending assistant response: %v", err)
 		return
 	}
 }
 
-func handleTextMessage(conn *websocket.Conn, wsMessage models.WebSocketMessage) {
-	llmOutput, err := services.CallLLMAPI(wsMessage.Messages)
+func handleTextMessage(conn *websocket.Conn, textMessage models.WebSocketMessage) {
+	assistantMessage, err := services.CallLLMAPI(textMessage.Messages)
 	if err != nil {
 		log.Printf("LLM error: %v", err)
 		conn.WriteMessage(websocket.TextMessage, []byte("Error processing your request."))
 		return
 	}
 
-	log.Printf("LLM: %s", llmOutput)
+	log.Printf("LLM: %s", assistantMessage)
 
-	err = services.GenerateSpeech(llmOutput, config.AnswerAudioFile)
+	err = services.GenerateSpeech(assistantMessage, config.AnswerAudioFile)
 	if err != nil {
 		log.Printf("Error generating speech: %v", err)
 		conn.WriteMessage(websocket.TextMessage, []byte("Error generating speech."))
@@ -155,7 +155,7 @@ func handleTextMessage(conn *websocket.Conn, wsMessage models.WebSocketMessage) 
 
 	response := models.Response{
 		Type: "assistant",
-		Text: llmOutput,
+		Text: assistantMessage,
 	}
 	responseJSON, err := json.Marshal(response)
 	if err != nil {
@@ -169,4 +169,3 @@ func handleTextMessage(conn *websocket.Conn, wsMessage models.WebSocketMessage) 
 		return
 	}
 }
-

@@ -32,9 +32,8 @@ func TranscribeAudio(audioPath string) (string, error) {
 		return "", fmt.Errorf("whisper-cli transcription failed: %v", err)
 	}
 
-	transcribedText := strings.TrimSpace(stdout.String())
-	log.Printf("Transcribed text: %s", transcribedText)
+	transcription := strings.TrimSpace(stdout.String())
+	log.Printf("Transcribed text: %s", transcription)
 
-	return transcribedText, nil
+	return transcription, nil
 }
-
