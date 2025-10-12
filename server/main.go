@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -21,33 +20,6 @@ var upgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool {
 		return true // Allow connections from any origin
 	},
-}
-
-func transcribeAudio(audioPath string) (string, error) {
-	log.Printf("Transcribing audio file: %s", audioPath)
-
-	cmd := exec.Command(config.WhisperBinPath,
-		"--no-prints",
-		"--no-timestamps",
-		"--language", config.WhisperLanguage,
-		"--model", config.WhisperModel,
-		"--file", audioPath)
-
-	var stdout, stderr bytes.Buffer
-	cmd.Stdout = &stdout
-	cmd.Stderr = &stderr
-
-	err := cmd.Run()
-	if err != nil {
-		log.Printf("whisper-cli stdout: %s", stdout.String())
-		log.Printf("whisper-cli stderr: %s", stderr.String())
-		return "", fmt.Errorf("whisper-cli transcription failed: %v", err)
-	}
-
-	transcribedText := strings.TrimSpace(stdout.String())
-	log.Printf("Transcribed text: %s", transcribedText)
-
-	return transcribedText, nil
 }
 
 func handleWebSocket(w http.ResponseWriter, r *http.Request) {
@@ -82,7 +54,7 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 
 			log.Printf("Audio successfully processed and saved to question.wav")
 
-			transcribedText, err := transcribeAudio(filepath.Join(config.AudioDir, config.QuestionAudioFile))
+			transcribedText, err := services.TranscribeAudio(filepath.Join(config.AudioDir, config.QuestionAudioFile))
 			if err != nil {
 				log.Printf("Error transcribing audio: %v", err)
 				errorMsg := fmt.Sprintf("Error transcribing audio: %v", err)
