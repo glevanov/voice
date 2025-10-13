@@ -17,7 +17,7 @@
     class:warning={["Connecting", "Reconnecting"].includes($connectionStatus)}
     class:success={$connectionStatus === "Connected"}
     class:pulse={["Connecting", "Reconnecting"].includes($connectionStatus)}
-  />
+  ></span>
   {connectionStatusMap[$connectionStatus]}
 </div>
 

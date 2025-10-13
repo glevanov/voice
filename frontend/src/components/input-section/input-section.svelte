@@ -7,9 +7,9 @@
   import VoiceRecorder from "../voice-recorder/voice-recorder.svelte";
   import SubmitIcon from "./submit-icon.svelte";
 
-  let value: string = "";
+  let value: string = $state("");
 
-  $: disabled = $connectionStatus !== "Connected";
+  let disabled = $derived($connectionStatus !== "Connected");
 
   function handleInput(event: Event) {
     const target = event.target as HTMLTextAreaElement;
@@ -46,15 +46,15 @@
   }
 </script>
 
-<form class="input-section" on:submit={handleSubmit}>
+<form class="input-section" onsubmit={handleSubmit}>
   <textarea
     bind:value
     aria-label="Skriv ditt meddelande här."
     placeholder={disabled ? "Ej ansluten" : "Skriv ditt meddelande här."}
     {disabled}
     rows={3}
-    on:input={handleInput}
-    on:keydown={handleKeydown}
+    oninput={handleInput}
+    onkeydown={handleKeydown}
     class="textarea"
   ></textarea>
 
@@ -94,10 +94,10 @@
     outline-offset: 2px;
     transition: outline-color 0.2s ease;
 
-    &:has(.textarea:focus) {
+    &:has(:global(.textarea:focus)) {
       border-color: var(--primary);
     }
-    &:has(.textarea:focus-visible) {
+    &:has(:global(.textarea:focus-visible)) {
       outline-color: var(--outline-color);
     }
   }

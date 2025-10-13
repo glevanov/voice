@@ -7,9 +7,13 @@
   import RecordIcon from "./record-icon.svelte";
   import StopIcon from "./stop-icon.svelte";
 
-  export let disabled: boolean = false;
+  interface Props {
+    disabled?: boolean;
+  }
 
-  let isRecording = false;
+  let { disabled = false }: Props = $props();
+
+  let isRecording = $state(false);
   let mediaRecorder: MediaRecorder | null = null;
   let chunks: Blob[] = [];
 
@@ -68,7 +72,7 @@
 <Button
   isRound
   {disabled}
-  on:click={handleClick}
+  onclick={handleClick}
   aria-label={isRecording ? "Sluta spela in." : "Starta inspelning."}
 >
   {#if isRecording}

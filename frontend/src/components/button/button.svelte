@@ -1,13 +1,24 @@
 <script lang="ts">
+  import type { HTMLButtonAttributes } from "svelte/elements";
+
   type Fill = "filled" | "outlined";
   type Color = "primary" | "danger";
 
-  export let fill: Fill = "filled";
-  export let isRound: boolean = false;
-  export let color: Color = "primary";
-  export let className: string = "";
+  interface Props extends HTMLButtonAttributes {
+    fill?: Fill;
+    isRound?: boolean;
+    color?: Color;
+  }
 
-  $: merged = `base ${className}`;
+  let {
+    fill = "filled",
+    isRound = false,
+    color = "primary",
+    children,
+    ...rest
+  }: Props = $props();
+
+  let merged = $derived(`base ${rest.class ?? ""}`);
 </script>
 
 <button
@@ -18,9 +29,9 @@
   class:shape-circular={isRound === true}
   class:color-primary={color === "primary"}
   class:color-danger={color === "danger"}
-  {...$$restProps}
+  {...rest}
 >
-  <slot />
+  {@render children?.()}
 </button>
 
 <style>

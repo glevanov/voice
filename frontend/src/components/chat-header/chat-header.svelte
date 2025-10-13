@@ -4,13 +4,13 @@
   import { clearMessages } from "../../store/messages.js";
   import { connectionStatus } from "../../store/websocket";
 
-  $: disabled = $connectionStatus !== "Connected";
+  let disabled = $derived($connectionStatus !== "Connected");
 </script>
 
 <div class="chat-header">
   <StatusIndicator />
 
-  <Button on:click={clearMessages} fill="outlined" color="danger" {disabled}>
+  <Button onclick={clearMessages} fill="outlined" color="danger" {disabled}>
     Rensa chatt
   </Button>
 </div>
