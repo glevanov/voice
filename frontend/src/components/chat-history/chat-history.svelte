@@ -1,5 +1,6 @@
 <script lang="ts">
-  import { messages } from "../../store/messages";
+  import { messages, isGeneratingMessage } from "../../store/messages";
+  import LoaderDots from "./loader-dots.svelte"
 </script>
 
 <div class="chat-history">
@@ -8,7 +9,12 @@
       {message.content}
     </div>
   {/each}
-  {#if $messages.length === 0}
+  {#if $isGeneratingMessage === true}
+    <div class="message content assistant">
+        <LoaderDots></LoaderDots>
+    </div>
+  {/if}
+  {#if $messages.length === 0 && $isGeneratingMessage === false}
     <div class="no-messages">Vad vill du prata om idag?</div>
   {/if}
 </div>

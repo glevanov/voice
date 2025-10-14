@@ -8,7 +8,11 @@ export type Message = {
 
 export const messages = writable<Message[]>([]);
 
+export const isGeneratingMessage = writable(false);
+
 export function addUserMessage(content: string) {
+  isGeneratingMessage.set(true);
+
   messages.update((msgs) => [
     ...msgs,
     {
@@ -20,6 +24,8 @@ export function addUserMessage(content: string) {
 }
 
 export function addAssistantMessage(content: string) {
+  isGeneratingMessage.set(false);
+
   messages.update((msgs) => [
     ...msgs,
     {
@@ -32,4 +38,5 @@ export function addAssistantMessage(content: string) {
 
 export function clearMessages() {
   messages.set([]);
+  isGeneratingMessage.set(false);
 }
