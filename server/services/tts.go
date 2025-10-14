@@ -8,7 +8,7 @@ import (
 
 func GenerateSpeech(text string, outputFilename string) error {
 	piperCommand := fmt.Sprintf(`echo "%s" | %s/piper --model %s/%s --output_file %s/%s`,
-		text, config.PiperDir, config.PiperDir, config.PiperModel, config.AudioDir, outputFilename)
+		text, config.PiperDir, config.ModelsDir, config.PiperModel, config.AudioDir, outputFilename)
 
 	cmd := exec.Command("bash", "-c", piperCommand)
 	err := cmd.Run()

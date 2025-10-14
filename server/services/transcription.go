@@ -13,11 +13,12 @@ import (
 func TranscribeAudio(audioPath string) (string, error) {
 	log.Printf("Transcribing audio file: %s", audioPath)
 
-	cmd := exec.Command(config.WhisperBinPath,
+    whisperModelPath := fmt.Sprintf("%s/%s", config.ModelsDir, config.WhisperModel)
+	cmd := exec.Command("whisper-cli",
 		"--no-prints",
 		"--no-timestamps",
 		"--language", config.WhisperLanguage,
-		"--model", config.WhisperModel,
+		"--model", whisperModelPath,
 		"--file", audioPath)
 
 	var stdout, stderr bytes.Buffer

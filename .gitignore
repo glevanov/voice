@@ -1,5 +1,12 @@
-audio
-!audio/.gitkeep
-piper
-!piper/.gitkeep
+/audio
+!/audio/.gitkeep
+
+/bin
+!/bin/setup_piper.sh
+!/bin/piper/.gitkeep
+
+/models
+!/models/.gitkeep
+
+node_modules
 .idea
