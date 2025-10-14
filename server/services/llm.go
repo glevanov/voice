@@ -7,10 +7,18 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"regexp"
 
 	"voice-server/config"
 	"voice-server/models"
 )
+
+// Removes unwanted characters from LLM response
+// Preserves letters (including Swedish), numbers, punctuation and whitespace
+func cleanLLMOutput(text string) string {
+	re := regexp.MustCompile(`[^a-zA-Z0-9åäöÅÄÖ\s.,!?;:()\-'"]+`)
+	return re.ReplaceAllString(text, "")
+}
 
 func CallLLMAPI(messages []models.Message) (string, error) {
 	conversationMessages := []models.Message{
@@ -56,5 +64,8 @@ func CallLLMAPI(messages []models.Message) (string, error) {
 		return "", fmt.Errorf("no choices in response")
 	}
 
-	return chatResponse.Choices[0].Message.Content, nil
+	responseContent := chatResponse.Choices[0].Message.Content
+	cleanedContent := cleanLLMOutput(responseContent)
+
+	return cleanedContent, nil
 }
