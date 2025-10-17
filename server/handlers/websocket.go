@@ -78,9 +78,9 @@ func handleAudioMessage(conn *websocket.Conn, audioMsg models.AudioMessage) {
 		return
 	}
 
-	transcriptionResponse := models.TranscriptionResponse{
-		Type: "user",
-		Text: transcription,
+	transcriptionResponse := models.UserMessage{
+		Name:    "user-message",
+		Payload: transcription,
 	}
 	transcriptionJSON, err := json.Marshal(transcriptionResponse)
 	if err != nil {
@@ -118,9 +118,9 @@ func handleAudioMessage(conn *websocket.Conn, audioMsg models.AudioMessage) {
 		return
 	}
 
-	assistantResponse := models.Response{
-		Type: "assistant",
-		Text: assistantMessage,
+	assistantResponse := models.AssistantMessage{
+		Name:    "assistant-message",
+		Payload: assistantMessage,
 	}
 	assistantJSON, err := json.Marshal(assistantResponse)
 	if err != nil {
@@ -152,9 +152,9 @@ func handleTextMessage(conn *websocket.Conn, textMessage models.WebSocketMessage
 		return
 	}
 
-	response := models.Response{
-		Type: "assistant",
-		Text: assistantMessage,
+	response := models.AssistantMessage{
+		Name:    "assistant-message",
+		Payload: assistantMessage,
 	}
 	responseJSON, err := json.Marshal(response)
 	if err != nil {

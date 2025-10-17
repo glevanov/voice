@@ -2,7 +2,8 @@
   import { get } from "svelte/store";
 
   import { messages, addUserMessage } from "../../store/messages";
-  import { websocketStore, connectionStatus } from "../../store/websocket";
+  import { sendMessages } from "../../service/websocket";
+  import { connectionStatus } from "../../store/connection-status";
   import Button from "../button/button.svelte";
   import VoiceRecorder from "../voice-recorder/voice-recorder.svelte";
   import SubmitIcon from "./submit-icon.svelte";
@@ -38,7 +39,7 @@
     const currentMessages = get(messages);
     const payload = { messages: currentMessages };
 
-    const sent = websocketStore.sendMessages(payload);
+    const sent = sendMessages(payload);
     if (!sent) {
       alert("WebSocket‑anslutningen är inte öppen.");
     }

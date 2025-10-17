@@ -2,16 +2,21 @@
   import { onDestroy } from "svelte";
 
   import "./app.css";
-  import { websocketStore } from "./store/websocket";
+  import { addHandler, connect, disconnect } from "./service/websocket";
   import ChatHistory from "./components/chat-history/chat-history.svelte";
   import InputSection from "./components/input-section/input-section.svelte";
   import AudioElement from "./components/audio-element/audio-element.svelte";
   import ChatHeader from "./components/chat-header/chat-header.svelte";
+  import { addAssistantMessage, addUserMessage } from "./store/messages";
 
-  websocketStore.connect();
+  connect();
+  addHandler("user-message", (payload: string) => addUserMessage(payload));
+  addHandler("assistant-message", (payload: string) =>
+    addAssistantMessage(payload),
+  );
 
   onDestroy(() => {
-    websocketStore.disconnect();
+    disconnect();
   });
 </script>
 

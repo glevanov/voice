@@ -19,9 +19,14 @@ type ChatResponse struct {
 	Choices []ChatChoice `json:"choices"`
 }
 
-type Response struct {
-	Type string `json:"type"`
-	Text string `json:"text"`
+type UserMessage struct {
+	Name    string `json:"name"`
+	Payload string `json:"payload"`
+}
+
+type AssistantMessage struct {
+	Name    string `json:"name"`
+	Payload string `json:"payload"`
 }
 
 type WebSocketMessage struct {
@@ -32,9 +37,4 @@ type AudioMessage struct {
 	Type      string    `json:"type"`
 	AudioData string    `json:"audioData"`
 	Messages  []Message `json:"messages"`
-}
-
-type TranscriptionResponse struct {
-	Type string `json:"type"`
-	Text string `json:"text"`
 }

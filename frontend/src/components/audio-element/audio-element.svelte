@@ -1,34 +1,20 @@
 <script lang="ts">
   import { onDestroy } from "svelte";
 
-  import { websocketStore } from "../../store/websocket";
-  import { addUserMessage, addAssistantMessage } from "../../store/messages.js";
-  import { play, cleanup } from "../../service/audio.js";
+  import { play, cleanup } from "../../service/audio";
+  import { addHandler } from "../../service/websocket";
 
   let audio: string | null = $state(null);
   let audioElement: HTMLAudioElement | null = $state(null);
 
-  websocketStore.onMessage((event: MessageEvent): void => {
-    try {
-      const data = JSON.parse(event.data);
-
-      if (data.type === "user") {
-        addUserMessage(data.text);
-      } else if (data.type === "assistant") {
-        addAssistantMessage(data.text);
-
-        play(audioElement, "answer.wav")
-          .then((audioUrl) => {
-            audio = audioUrl;
-          })
-          .catch((error) => {
-            console.error("Error playing audio:", error);
-          });
-      }
-    } catch (error) {
-      console.error("Error parsing response:", error);
-      addAssistantMessage(event.data);
-    }
+  addHandler("assistant-message", (_: string) => {
+    play(audioElement, "answer.wav")
+      .then((audioUrl) => {
+        audio = audioUrl;
+      })
+      .catch((error) => {
+        console.error("Error playing audio:", error);
+      });
   });
 
   onDestroy(() => {

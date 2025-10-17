@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { connectionStatus, type Status } from "../../store/websocket";
+  import { connectionStatus, type Status } from "../../store/connection-status";
 
   const connectionStatusMap: Record<Status, string> = {
     ["Connecting"]: "Ansluter",

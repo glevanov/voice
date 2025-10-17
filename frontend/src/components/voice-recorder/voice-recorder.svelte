@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onDestroy } from "svelte";
 
-  import { websocketStore } from "../../store/websocket";
+  import { sendVoice } from "../../service/websocket";
   import { messages } from "../../store/messages";
   import Button from "../button/button.svelte";
   import RecordIcon from "./record-icon.svelte";
@@ -35,7 +35,7 @@
           track.stop();
         }
 
-        await websocketStore.sendVoice(blob, $messages);
+        await sendVoice(blob, $messages);
         mediaRecorder = null;
       };
 

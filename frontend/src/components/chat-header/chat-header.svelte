@@ -2,7 +2,7 @@
   import StatusIndicator from "../status-indicator/status-indicator.svelte";
   import Button from "../button/button.svelte";
   import { clearMessages } from "../../store/messages.js";
-  import { connectionStatus } from "../../store/websocket";
+  import { connectionStatus } from "../../store/connection-status";
 
   let disabled = $derived($connectionStatus !== "Connected");
 </script>

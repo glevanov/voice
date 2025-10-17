@@ -6,21 +6,25 @@
 <span class="third">●</span>
 
 <style>
-    .first {
-        animation: blink 2s infinite;
-    }
+  .first {
+    animation: blink 2s infinite;
+  }
 
-    .second {
-        animation: blink 2s infinite 0.2s;
-    }
+  .second {
+    animation: blink 2s infinite 0.2s;
+  }
 
-    .third {
-        animation: blink 2s infinite 0.4s;
-    }
+  .third {
+    animation: blink 2s infinite 0.4s;
+  }
 
-
-    @keyframes blink {
-        0%, 100% { opacity: 0; }
-        50% { opacity: 1; }
+  @keyframes blink {
+    0%,
+    100% {
+      opacity: 0;
     }
+    50% {
+      opacity: 1;
+    }
+  }
 </style>
