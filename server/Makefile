@@ -1,4 +1,4 @@
-.PHONY: build run clean deps
+.PHONY: build run clean deps build-linux fmt help
 
 # Go parameters
 GOCMD=go
@@ -10,18 +10,18 @@ GOMOD=$(GOCMD) mod
 BINARY_NAME=voice-server
 BINARY_UNIX=$(BINARY_NAME)_unix
 
-# Build the binary
-build:
-	$(GOBUILD) -o $(BINARY_NAME) -v ./main.go
+# Run the application
+run:
+	$(GOCMD) run main.go
 
 # Install dependencies
 deps:
 	$(GOMOD) download
 	$(GOMOD) tidy
 
-# Run the application
-run:
-	$(GOCMD) run main.go
+# Build the binary
+build:
+	$(GOBUILD) -o $(BINARY_NAME) -v ./main.go
 
 # Clean build artifacts
 clean:
@@ -41,10 +41,10 @@ fmt:
 # Help target
 help:
 	@echo "Available targets:"
-	@echo "  build        - Build the binary"
 	@echo "  run          - Run the application"
-	@echo "  clean        - Clean build artifacts"
 	@echo "  deps         - Install dependencies"
+	@echo "  build        - Build the binary"
+	@echo "  clean        - Clean build artifacts"
 	@echo "  build-linux  - Cross compile for Linux"
-	@echo "  fmt          - Format code"
+	@echo "  fmt          - Format source code"
 	@echo "  help         - Show this help"
