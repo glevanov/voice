@@ -1,21 +1,40 @@
-# Voice Assistant
-A real-time voice assistant with speech synthesis using Piper TTS and LLM integration.
+# Voice Chat
+A real-time voice chat backed by local LLMs.
 
-## Binaries setup
-You need to have Piper and Whisper installed:
-- Piper: https://github.com/OHF-Voice/piper1-gpl
-- Whisper: https://github.com/ggml-org/whisper.cpp
+![App screenshot](media/screenshot.jpg)
 
-You'll also need models for both:
-- Piper: https://huggingface.co/rhasspy/piper-voices/tree/main
-- Whisper: https://huggingface.co/ggerganov/whisper.cpp/tree/main
+## Overview
+General architecture:
+![General overview chart](media/overview.png)
+
+Explanation of the chat flow:
+![Chat flow chart](media/schema.png)
+
+## Local setup
+### Basic requirements
+I could not find an acceptable way to containerize this,
+due to how Piper and Whisper are (not) distributed,
+so running this app requires a bit of local setup.
+
+I am running this on an amd64 Linux machine, which has:
+- Node.js
+- pnpm
+- go
+- ffmpeg
+- LM Studio API server with a `gpt-oss` model
+
+### Piper and Whisper
+You'll also need Piper and Whisper installed, including their models:
+- Piper
+  - repo: https://github.com/OHF-Voice/piper1-gpl
+  - models: https://huggingface.co/rhasspy/piper-voices/tree/main
+- Whisper
+  - repo: https://github.com/ggml-org/whisper.cpp
+  - models: https://huggingface.co/ggerganov/whisper.cpp/tree/main
 
 Place models in the `models` directory.
 
-You'll also need `ffmpeg` for audio conversion.
-
 To set up Piper and download swedish models run `sh bin/setup_piper.sh`.
-The script assumes you are on Linux amd64.
 
 Whisper you'll have to compile yourself and add it to `PATH`,
 as there is no universal binary.
