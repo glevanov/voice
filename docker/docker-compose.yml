@@ -1,0 +1,11 @@
+services:
+  piper:
+    image: voice-piper
+    container_name: voice-piper
+    ports:
+      - "10100:5000"
+    volumes:
+      - ../models:/models:ro,z
+    environment:
+      - PIPER_MODEL=sv_SE-nst-medium.onnx
+
