@@ -3,9 +3,25 @@ services:
     image: voice-piper
     container_name: voice-piper
     ports:
-      - "10100:5000"
+      - "4001:5000"
     volumes:
       - ../models:/models:ro,z
     environment:
       - PIPER_MODEL=sv_SE-nst-medium.onnx
-
+  whisper:
+    image: voice-whisper
+    container_name: voice-whisper
+    # For AMD Vulkan support
+    devices:
+      - /dev/kfd:/dev/kfd
+      - /dev/dri:/dev/dri
+    group_add:
+      - video
+    ports:
+      - "4002:3000"
+    volumes:
+      - ../models:/models:ro,z
+      - ../audio:/audio:ro,z
+    environment:
+      - WHISPER_MODEL=ggml-large-v3.bin
+      - LANGUAGE=Swedish
