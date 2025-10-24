@@ -15,7 +15,7 @@ type PiperRequest struct {
 	Text string `json:"text"`
 }
 
-func GenerateSpeech(text string, outputFilename string) error {
+func GenerateSpeech(text string) error {
 	requestBody := PiperRequest{
 		Text: text,
 	}
@@ -44,7 +44,7 @@ func GenerateSpeech(text string, outputFilename string) error {
 		return fmt.Errorf("failed to read response: %w", err)
 	}
 
-	outputPath := filepath.Join(config.AudioDir, outputFilename)
+	outputPath := filepath.Join(config.AudioDir, config.AnswerAudioFile)
 	err = os.WriteFile(outputPath, audioData, 0644)
 	if err != nil {
 		return fmt.Errorf("failed to write audio file: %w", err)

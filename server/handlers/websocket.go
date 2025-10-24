@@ -110,7 +110,7 @@ func handleAudioMessage(conn *websocket.Conn, audioMsg models.AudioMessage) {
 
 	log.Printf("LLM: %s", assistantMessage)
 
-	err = services.GenerateSpeech(assistantMessage, config.AnswerAudioFile)
+	err = services.GenerateSpeech(assistantMessage)
 	if err != nil {
 		log.Printf("Error generating speech: %v", err)
 		errorMsg := fmt.Sprintf("Error generating speech: %v", err)
@@ -145,7 +145,7 @@ func handleTextMessage(conn *websocket.Conn, textMessage models.WebSocketMessage
 
 	log.Printf("LLM: %s", assistantMessage)
 
-	err = services.GenerateSpeech(assistantMessage, config.AnswerAudioFile)
+	err = services.GenerateSpeech(assistantMessage)
 	if err != nil {
 		log.Printf("Error generating speech: %v", err)
 		conn.WriteMessage(websocket.TextMessage, []byte("Error generating speech."))
