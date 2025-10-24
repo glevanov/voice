@@ -1,10 +1,10 @@
 package services
 
 import (
-	"bytes"
 	"fmt"
+	"io"
 	"log"
-	"os/exec"
+	"net/http"
 	"strings"
 
 	"voice-server/config"
@@ -13,26 +13,25 @@ import (
 func TranscribeAudio(audioPath string) (string, error) {
 	log.Printf("Transcribing audio file: %s", audioPath)
 
-    whisperModelPath := fmt.Sprintf("%s/%s", config.ModelsDir, config.WhisperModel)
-	cmd := exec.Command("whisper-cli",
-		"--no-prints",
-		"--no-timestamps",
-		"--language", config.WhisperLanguage,
-		"--model", whisperModelPath,
-		"--file", audioPath)
+	whisperURL := fmt.Sprintf("%s/transcribe", config.WhisperAPIUrl)
 
-	var stdout, stderr bytes.Buffer
-	cmd.Stdout = &stdout
-	cmd.Stderr = &stderr
-
-	err := cmd.Run()
+	resp, err := http.Get(whisperURL)
 	if err != nil {
-		log.Printf("whisper-cli stdout: %s", stdout.String())
-		log.Printf("whisper-cli stderr: %s", stderr.String())
-		return "", fmt.Errorf("whisper-cli transcription failed: %v", err)
+		return "", fmt.Errorf("Failed to call Whisper service: %v", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return "", fmt.Errorf("Whisper service returned status %d: %s", resp.StatusCode, string(body))
 	}
 
-	transcription := strings.TrimSpace(stdout.String())
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", fmt.Errorf("Failed to read Whisper response: %v", err)
+	}
+
+	transcription := strings.TrimSpace(string(body))
 	log.Printf("Transcribed text: %s", transcription)
 
 	return transcription, nil

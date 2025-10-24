@@ -21,8 +21,7 @@ const (
 	AnswerAudioFile   = "answer.wav"
 
 	// Whisper Configuration
-	// "English", "Swedish" or "auto" for automatic language detection
-	WhisperLanguage = "Swedish"
+	WhisperAPIUrl = "http://localhost:4002"
 
 	// System Prompt
 	SystemPrompt = `You are a helpful and friendly conversation partner.
