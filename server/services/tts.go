@@ -1,19 +1,53 @@
 package services
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
-	"os/exec"
+	"io"
+	"net/http"
+	"os"
+	"path/filepath"
 	"voice-server/config"
 )
 
-func GenerateSpeech(text string, outputFilename string) error {
-	piperCommand := fmt.Sprintf(`echo "%s" | %s/piper --model %s/%s --output_file %s/%s`,
-		text, config.PiperDir, config.ModelsDir, config.PiperModel, config.AudioDir, outputFilename)
+type PiperRequest struct {
+	Text string `json:"text"`
+}
 
-	cmd := exec.Command("bash", "-c", piperCommand)
-	err := cmd.Run()
+func GenerateSpeech(text string, outputFilename string) error {
+	requestBody := PiperRequest{
+		Text: text,
+	}
+
+	jsonData, err := json.Marshal(requestBody)
 	if err != nil {
-		return fmt.Errorf("piper TTS error: %w", err)
+		return fmt.Errorf("failed to marshal request: %w", err)
+	}
+
+	resp, err := http.Post(
+		config.PiperAPIUrl,
+		"application/json",
+		bytes.NewBuffer(jsonData),
+	)
+	if err != nil {
+		return fmt.Errorf("piper HTTP request error: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("piper server returned status: %d", resp.StatusCode)
+	}
+
+	audioData, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return fmt.Errorf("failed to read response: %w", err)
+	}
+
+	outputPath := filepath.Join(config.AudioDir, outputFilename)
+	err = os.WriteFile(outputPath, audioData, 0644)
+	if err != nil {
+		return fmt.Errorf("failed to write audio file: %w", err)
 	}
 
 	return nil

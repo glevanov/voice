@@ -20,8 +20,9 @@ const (
 	QuestionAudioFile = "question.wav"
 	AnswerAudioFile   = "answer.wav"
 
-	// Whisper Configuration
+	// API URL
 	WhisperAPIUrl = "http://localhost:4002"
+	PiperAPIUrl = "http://localhost:4001"
 
 	// System Prompt
 	SystemPrompt = `You are a helpful and friendly conversation partner.
