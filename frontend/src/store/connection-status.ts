@@ -1,9 +1,9 @@
 import { writable } from "svelte/store";
 
 export type Status =
-  | "Connecting"
-  | "Connected"
-  | "Disconnected"
-  | "Reconnecting"
-  | "Error";
-export const connectionStatus = writable<Status>("Connecting");
+  | "connecting"
+  | "connected"
+  | "disconnected"
+  | "reconnecting"
+  | "error";
+export const connectionStatus = writable<Status>("connecting");

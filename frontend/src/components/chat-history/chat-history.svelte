@@ -1,6 +1,7 @@
 <script lang="ts">
   import { messages, isGeneratingMessage } from "../../store/messages";
   import LoaderDots from "./loader-dots.svelte";
+  import { i18n } from "../../service/i18n/i18n";
 </script>
 
 <div class="chat-history">
@@ -15,7 +16,7 @@
     </div>
   {/if}
   {#if $messages.length === 0 && $isGeneratingMessage === false}
-    <div class="no-messages">Vad vill du prata om idag?</div>
+    <div class="no-messages">{i18n("chatPlaceholder")}</div>
   {/if}
 </div>
 

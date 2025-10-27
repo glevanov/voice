@@ -44,7 +44,7 @@ const handleReconnect = () => {
     baseReconnectDelay * Math.pow(2, reconnectAttempts - 1),
     maxReconnectDelay,
   );
-  connectionStatus.set("Reconnecting");
+  connectionStatus.set("reconnecting");
 
   console.log(
     `Attempting to reconnect in ${delay}ms (attempt ${reconnectAttempts})`,
@@ -107,19 +107,19 @@ export const connect = () => {
     ws = new WebSocket("ws://localhost:3002/ws");
 
     ws.onopen = () => {
-      connectionStatus.set("Connected");
+      connectionStatus.set("connected");
       reconnectAttempts = 0;
     };
 
     ws.onclose = (event) => {
-      connectionStatus.set("Disconnected");
+      connectionStatus.set("disconnected");
       if (event.code !== 1000) {
         handleReconnect();
       }
     };
 
     ws.onerror = (error) => {
-      connectionStatus.set("Error");
+      connectionStatus.set("error");
       console.error("WebSocket error:", error);
     };
 

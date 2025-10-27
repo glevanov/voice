@@ -1,24 +1,19 @@
 <script lang="ts">
-  import { connectionStatus, type Status } from "../../store/connection-status";
+  import { connectionStatus } from "../../store/connection-status";
+  import { i18n } from "../../service/i18n/i18n";
 
-  const connectionStatusMap: Record<Status, string> = {
-    ["Connecting"]: "Ansluter",
-    ["Connected"]: "Ansluten",
-    ["Disconnected"]: "Frånkopplad",
-    ["Reconnecting"]: "Återansluter",
-    ["Error"]: "Fel",
-  } as const;
+  let status = $derived(i18n(`connection.${$connectionStatus}`));
 </script>
 
 <div class="status">
   <span
     class="dot pulse"
-    class:danger={["Disconnected", "Error"].includes($connectionStatus)}
-    class:warning={["Connecting", "Reconnecting"].includes($connectionStatus)}
-    class:success={$connectionStatus === "Connected"}
-    class:pulse={["Connecting", "Reconnecting"].includes($connectionStatus)}
+    class:danger={["disconnected", "error"].includes($connectionStatus)}
+    class:warning={["connecting", "reconnecting"].includes($connectionStatus)}
+    class:success={$connectionStatus === "connected"}
+    class:pulse={["connecting", "reconnecting"].includes($connectionStatus)}
   ></span>
-  {connectionStatusMap[$connectionStatus]}
+  {status}
 </div>
 
 <style>

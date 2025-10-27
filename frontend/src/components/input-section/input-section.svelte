@@ -10,7 +10,7 @@
 
   let value: string = $state("");
 
-  let disabled = $derived($connectionStatus !== "Connected");
+  let disabled = $derived($connectionStatus !== "connected");
 
   function handleInput(event: Event) {
     const target = event.target as HTMLTextAreaElement;
