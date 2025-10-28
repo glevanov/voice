@@ -14,14 +14,14 @@
   "license": "MIT",
   "packageManager": "pnpm@10.12.1",
   "devDependencies": {
-    "oxlint": "1.23.0",
+    "oxlint": "1.24.0",
     "prettier": "3.6.2",
     "prettier-plugin-svelte": "3.4.0",
     "typescript": "5.9.3",
-    "vite": "7.1.10"
+    "vite": "7.1.12"
   },
   "dependencies": {
     "@sveltejs/vite-plugin-svelte": "6.2.1",
-    "svelte": "5.40.2"
+    "svelte": "5.42.3"
   }
 }
