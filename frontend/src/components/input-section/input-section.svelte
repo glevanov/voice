@@ -7,6 +7,7 @@
   import Button from "../button/button.svelte";
   import VoiceRecorder from "../voice-recorder/voice-recorder.svelte";
   import SubmitIcon from "./submit-icon.svelte";
+  import { i18n } from "../../service/i18n/i18n";
 
   let value: string = $state("");
 
@@ -41,7 +42,7 @@
 
     const sent = sendMessages(payload);
     if (!sent) {
-      alert("WebSocket‑anslutningen är inte öppen.");
+      alert(i18n("input.connectionError"));
     }
     value = "";
   }
@@ -50,8 +51,10 @@
 <form class="input-section" onsubmit={handleSubmit}>
   <textarea
     bind:value
-    aria-label="Skriv ditt meddelande här."
-    placeholder={disabled ? "Ej ansluten" : "Skriv ditt meddelande här."}
+    aria-label={i18n("input.textAreaLabel")}
+    placeholder={disabled
+      ? i18n("input.placeholderDisconnected")
+      : i18n("input.placeholder")}
     {disabled}
     rows={3}
     oninput={handleInput}
@@ -64,6 +67,7 @@
 
     <Button
       type="submit"
+      aria-label={i18n("input.submit")}
       isRound
       fill="outlined"
       disabled={disabled || !value.trim()}><SubmitIcon /></Button

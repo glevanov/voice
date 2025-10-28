@@ -6,6 +6,7 @@
   import Button from "../button/button.svelte";
   import RecordIcon from "./record-icon.svelte";
   import StopIcon from "./stop-icon.svelte";
+  import { i18n } from "../../service/i18n/i18n";
 
   interface Props {
     disabled?: boolean;
@@ -43,9 +44,7 @@
       isRecording = true;
     } catch (error) {
       console.error("Error accessing microphone:", error);
-      alert(
-        "Kunde inte komma åt mikrofonen. Se till att du har gett nödvändiga behörigheter.",
-      );
+      alert(i18n("recording.microphonePermissionError"));
     }
   }
 
@@ -73,7 +72,7 @@
   isRound
   {disabled}
   onclick={handleClick}
-  aria-label={isRecording ? "Sluta spela in." : "Starta inspelning."}
+  aria-label={isRecording ? i18n("recording.stop") : i18n("recording.start")}
 >
   {#if isRecording}
     <div class="pulse">

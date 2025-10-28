@@ -10,4 +10,17 @@ export const en: Locale = {
     reconnecting: "Reconnecting",
     error: "Error",
   },
+  recording: {
+    start: "Start recording",
+    stop: "Stop recording",
+    microphonePermissionError:
+      "Could not access microphone. Make sure you have granted the necessary permissions.",
+  },
+  input: {
+    connectionError: "WebSocket connection is not open.",
+    placeholder: "Type your message here",
+    placeholderDisconnected: "Disconnected",
+    submit: "Submit",
+    textAreaLabel: "Write your message here",
+  },
 };
