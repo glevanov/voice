@@ -6,6 +6,8 @@ import {
   type ServerMessage,
 } from "./websocket.types";
 
+const WS_URL = "ws://localhost:4003/ws";
+
 let ws: WebSocket | null = null;
 let reconnectTimeout: number | null = null;
 let reconnectAttempts = 0;
@@ -104,7 +106,7 @@ export const sendVoice = async (data: Blob, messages: Message[]) => {
 
 export const connect = () => {
   try {
-    ws = new WebSocket("ws://localhost:3002/ws");
+    ws = new WebSocket(WS_URL);
 
     ws.onopen = () => {
       connectionStatus.set("connected");

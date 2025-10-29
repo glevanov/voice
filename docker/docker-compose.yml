@@ -1,4 +1,14 @@
 services:
+  voice-server:
+    image: voice-server
+    container_name: voice-server
+    ports:
+      - "4003:3002"
+    volumes:
+      - ../audio:/audio:z
+      - ../models:/models:ro,z
+    environment:
+      - LLM_MODEL=openai/gpt-oss-20b
   piper:
     image: voice-piper
     container_name: voice-piper
@@ -11,7 +21,7 @@ services:
   whisper:
     image: voice-whisper
     container_name: voice-whisper
-    # For AMD Vulkan support
+    # For Vulkan support
     devices:
       - /dev/kfd:/dev/kfd
       - /dev/dri:/dev/dri

@@ -1,11 +1,10 @@
 let currentAudio: string | null = null;
 
-export const play = async (
-  audioElement: HTMLAudioElement | null,
-  audioPath: string,
-) => {
+const ANSWER_URL = "http://localhost:4003/answer.wav";
+
+export const play = async (audioElement: HTMLAudioElement | null) => {
   try {
-    const response = await fetch(`http://localhost:3002/${audioPath}`);
+    const response = await fetch(ANSWER_URL);
     if (!response.ok) {
       throw new Error("Failed to fetch audio");
     }

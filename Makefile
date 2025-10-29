@@ -6,7 +6,10 @@ build-piper:
 build-whisper:
 	docker build -t voice-whisper ./docker/voice-whisper
 
-build-images: build-piper build-whisper
+build-server:
+	docker build -t voice-server ./server
+
+build-images: build-piper build-whisper build-server
 
 compose-up:
 	docker-compose -f docker/docker-compose.yml up -d

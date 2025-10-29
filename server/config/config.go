@@ -4,9 +4,6 @@ const (
 	// LLM Configuration
 	LLMModel  = "openai/gpt-oss-20b"
 	LLMAPIUrl = "http://localhost:1234/v1/chat/completions"
-	PiperModel = "sv_SE-nst-medium.onnx"
-	// "ggml-base.bin", "ggml-medium.bin", "ggml-large-v3.bin"
-	WhisperModel = "ggml-large-v3.bin"
 
 	// Server Configuration
 	Port = ":3002"

@@ -8,7 +8,7 @@
   let audioElement: HTMLAudioElement | null = $state(null);
 
   addHandler("assistant-message", (_: string) => {
-    play(audioElement, "answer.wav")
+    play(audioElement)
       .then((audioUrl) => {
         audio = audioUrl;
       })
